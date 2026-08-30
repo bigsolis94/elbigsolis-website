@@ -53,7 +53,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(8,8,8,.88);b
 .hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.92),rgba(0,0,0,.55) 46%,rgba(0,0,0,.12) 75%),linear-gradient(0deg,#080808 0%,transparent 42%)}
 .hero-content{position:relative;z-index:2;max-width:770px}
 .kicker,.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:4px;color:var(--yellow);font-weight:700}
-.hero h1{font-size:clamp(76px,13vw,164px);line-height:.79;letter-spacing:-6px;margin:18px 0 22px}
+.hero-logo{width:min(430px,72vw);height:auto;object-fit:contain;margin:18px 0 24px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.38))}
 .tagline{font:italic clamp(20px,2.6vw,31px) Georgia,serif;color:#eee5d7;margin:0 0 30px}
 .btns{display:flex;gap:12px;flex-wrap:wrap}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;border:1px solid var(--yellow);text-transform:uppercase;letter-spacing:1.4px;font-size:11px;font-weight:800;transition:.2s}
@@ -108,17 +108,17 @@ footer{padding:34px 0;border-top:1px solid #171717;color:#817d76;font-size:11px}
 @media(max-width:900px){.music-grid{grid-template-columns:repeat(2,1fr)}.store-intro{grid-template-columns:1fr}.direct-benefits{grid-template-columns:1fr}}
 @media(max-width:760px){
 .menu{display:block}.navlinks{position:absolute;top:72px;left:0;right:0;background:#0a0a0af7;border-bottom:1px solid #222;padding:22px 4.5%;display:none;flex-direction:column;align-items:flex-start;gap:18px}.navlinks.open{display:flex}.nav-cta{width:100%;text-align:center}
-.hero{background-position:63% center}.hero:before{background:linear-gradient(0deg,#080808 0%,rgba(0,0,0,.68) 57%,rgba(0,0,0,.25))}.hero h1{letter-spacing:-3px}
+.hero{background-position:63% center}.hero:before{background:linear-gradient(0deg,#080808 0%,rgba(0,0,0,.68) 57%,rgba(0,0,0,.25))}.hero-logo{width:min(360px,70vw)}
 section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-photo{min-height:540px}.latest-copy{padding:28px}
 .gallery{grid-template-columns:1fr 1fr;grid-template-rows:330px 230px 230px}.g1{grid-column:1/3;grid-row:auto}.g4{grid-column:1/3}
 .video-cta{aspect-ratio:4/3}}
-@media(max-width:520px){.music-grid{grid-template-columns:1fr}.hero h1{font-size:72px}.amounts{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.music-grid{grid-template-columns:1fr}.hero-logo{width:min(300px,76vw)}.amounts{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <nav>
   <div class="wrap nav">
-    <a class="logo" href="#home" aria-label="Big Solis home"><img src="assets/logo.webp" alt="Big Solis logo"></a>
+    <a class="logo" href="#home" aria-label="Big Solis home"><img src="assets/RedSUN.jpg" alt="Big Solis logo"></a>
     <button class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
     <div class="navlinks" id="navLinks">
       <a href="#about">About</a><a href="#music">Music</a><a href="#buy">Buy Music</a><a href="#visuals">Visuals</a><a href="#contact">Contact</a>
@@ -129,7 +129,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
 <header class="hero" id="home"><div class="wrap hero-content">
   <div class="kicker">Independent Hip-Hop / Rap • Lodi, California</div>
-  <h1>BIG<br>SOLIS</h1>
+  <img class="hero-logo" src="assets/logo.webp" alt="BIG SOLIS">
   <p class="tagline">Rolitas tristes desde el corazón.</p>
   <div class="btns">
     <a class="btn primary" href="#latest">Listen Now</a>
