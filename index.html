@@ -113,6 +113,44 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 .gallery{grid-template-columns:1fr 1fr;grid-template-rows:330px 230px 230px}.g1{grid-column:1/3;grid-row:auto}.g4{grid-column:1/3}
 .video-cta{aspect-ratio:4/3}}
 @media(max-width:520px){.music-grid{grid-template-columns:1fr}.hero-logo{width:min(300px,76vw)}.amounts{grid-template-columns:repeat(2,1fr)}}
+
+.featured-release{padding:92px 0;background:linear-gradient(180deg,#0a0a0a,#080808)}
+.featured-release-grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:56px;align-items:center}
+.featured-release-art{position:relative}
+.featured-release-art img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid var(--line);box-shadow:0 24px 70px #0008}
+.featured-release-art:after{content:"NEW RELEASE";position:absolute;left:18px;bottom:18px;background:var(--yellow);color:#090909;padding:8px 11px;font-size:10px;letter-spacing:1.5px;font-weight:900}
+.featured-release-copy h2{font-size:clamp(46px,7vw,86px);line-height:.92;margin:10px 0 18px}
+.featured-release-copy .meta{color:var(--muted);margin-bottom:24px}
+.featured-release-copy .desc{font-size:17px;color:#c9c3b8;max-width:620px;margin-bottom:28px}
+
+.watch-section{background:#0b0b0b}
+.watch-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:42px;align-items:center}
+.video-feature{position:relative;display:block;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--line);background:#111}
+.video-feature img{width:100%;height:100%;object-fit:cover;transform:scale(1.01);transition:.35s}
+.video-feature:before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#000b,transparent 65%),#0002;z-index:1}
+.video-feature:hover img{transform:scale(1.04)}
+.video-play{position:absolute;z-index:2;inset:0;display:grid;place-items:center}
+.video-play span{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:var(--yellow);color:#080808;font-size:30px;padding-left:5px;box-shadow:0 10px 35px #0008}
+.video-label{position:absolute;z-index:2;left:22px;bottom:18px;font-size:11px;font-weight:800;letter-spacing:1.7px;text-transform:uppercase}
+.watch-copy h2{font-size:clamp(40px,5.5vw,70px);line-height:.96;margin:8px 0 20px}
+.watch-copy p{color:#bdb7ad;font-size:16px;margin-bottom:26px}
+@media(max-width:820px){
+  .featured-release-grid,.watch-grid{grid-template-columns:1fr}
+  .featured-release-copy h2{font-size:clamp(42px,13vw,68px)}
+}
+
+
+.fan-signup{padding:92px 0;background:linear-gradient(135deg,#111,#080808);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.fan-signup-box{max-width:880px;margin:auto;text-align:center;padding:52px 42px;border:1px solid var(--line);background:#0d0d0d}
+.fan-signup h2{font-size:clamp(42px,6vw,72px);line-height:.95;margin:10px 0 18px}
+.fan-signup p{max-width:620px;margin:0 auto 28px;color:#bbb5ab;font-size:16px}
+.signup-form{display:flex;max-width:650px;margin:0 auto;gap:10px}
+.signup-form input{flex:1;min-width:0;background:#050505;border:1px solid #3a382f;color:#fff;padding:16px 17px;font:inherit;outline:none}
+.signup-form input:focus{border-color:var(--yellow)}
+.signup-form button{border:0;cursor:pointer}
+.signup-note{font-size:11px!important;color:#777!important;margin-top:14px!important;margin-bottom:0!important}
+@media(max-width:650px){.signup-form{flex-direction:column}.fan-signup-box{padding:40px 20px}}
+
 </style>
 </head>
 <body>
@@ -121,7 +159,8 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
     <a class="logo" href="#home" aria-label="Big Solis home"><img src="assets/top-left-logo.png" alt="Big Solis logo"></a>
     <button class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
     <div class="navlinks" id="navLinks">
-      <a href="#about">About</a><a href="#music">Music</a><a href="#buy">Buy Music</a><a href="#visuals">Visuals</a><a href="#contact">Contact</a>
+      <a href="#about">About</a><a href="#music">Music</a><a href="#watch">Watch</a>
+<a href="#visuals">Visuals</a><a href="#join">Join</a><a href="#contact">Contact</a>
       <a class="nav-cta" href="#latest">Listen Now</a>
     </div>
   </div>
@@ -129,7 +168,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
 <header class="hero" id="home"><div class="wrap hero-content">
   <div class="kicker">Independent Hip-Hop / Rap • Lodi, California</div>
-  <img class="hero-logo" src="assets/logo.webp" alt="BIG SOLIS">
+  <img class="hero-logo" src="assets/big-solis-transparent.png" alt="BIG SOLIS">
   <p class="tagline">Rolitas tristes desde el corazón.</p>
   <div class="btns">
     <a class="btn primary" href="#latest">Listen Now</a>
@@ -137,6 +176,24 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
   </div>
   <div class="quick"><a href="https://music.apple.com/us/artist/big-solis/1666363753" target="_blank" rel="noopener">Apple Music</a><a href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener">YouTube</a><a href="https://www.instagram.com/el_bigsolis94/" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@el_bigsolis94" target="_blank" rel="noopener">TikTok</a></div>
 </div></header>
+
+<section class="featured-release" id="latest-release"><div class="wrap featured-release-grid">
+  <div class="featured-release-art">
+    <img src="assets/estres.webp" alt="Quítame El Estres cover artwork" loading="eager">
+  </div>
+  <div class="featured-release-copy">
+    <div class="eyebrow">Latest Release</div>
+    <h2>Quítame El Estres</h2>
+    <p class="meta">Big-O × Big Solis × Kid Carrillo • 2026</p>
+    <p class="desc">Tap in with the newest BIG SOLIS release. Stream it now and keep up with the next chapter.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6" target="_blank" rel="noopener">Listen on Spotify</a>
+      <a class="btn" href="https://music.apple.com/us/album/qu%C3%ADtame-el-estres-single/6771220464" target="_blank" rel="noopener">Apple Music</a>
+      <a class="btn" href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener">YouTube</a>
+    </div>
+  </div>
+</div></section>
+
 
 <section id="about"><div class="wrap about">
   <div class="about-photo" role="img" aria-label="Big Solis writing music"></div>
@@ -149,14 +206,6 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
 <section id="music"><div class="wrap">
   <div class="eyebrow">Music</div><h2 class="title">Latest &amp; featured.</h2>
-
-  <article class="latest" id="latest">
-    <div class="latest-art"><img src="assets/estres.webp" alt="Quítame El Estres cover artwork" loading="lazy"></div>
-    <div class="latest-copy"><div class="eyebrow">Latest release</div><h3>Quítame El Estres</h3><p>Bigo × Big Solis × Kid Carrillo • 2026</p>
-      <div class="btns"><a class="btn primary" href="https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6" target="_blank" rel="noopener">Listen on Spotify</a><a class="btn" href="https://music.apple.com/us/album/qu%C3%ADtame-el-estres-single/6771220464" target="_blank" rel="noopener">Apple Music</a></div>
-    </div>
-  </article>
-
   <div class="music-grid">
     <article class="release"><div class="cover"><img src="assets/perdida.webp" alt="Perdida cover" loading="lazy"></div><h3>Perdida</h3><p>Big Solis ft. Noble Esquivel • 2026</p><div class="release-links"><a href="https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6" target="_blank" rel="noopener">Spotify →</a><a href="https://music.apple.com/us/album/perdida-feat-noble-esquivel-single/1890326415" target="_blank" rel="noopener">Apple Music →</a></div></article>
     <article class="release"><div class="cover"><img src="assets/qtvb.webp" alt="Que Te Vaya Bien cover" loading="lazy"></div><h3>QTVB (Que Te Vaya Bien)</h3><p>Big Solis • 2026</p><div class="release-links"><a href="https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6" target="_blank" rel="noopener">Spotify →</a><a href="https://music.apple.com/us/album/qtvb-que-te-vaya-bien-single/1871629395" target="_blank" rel="noopener">Apple Music →</a></div></article>
@@ -169,54 +218,48 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 </div></section>
 
 
-<section id="buy"><div class="wrap">
-  <div class="eyebrow">Direct Support</div>
-  <h2 class="title">Buy the music.<br>Pay what you want.</h2>
-  <div class="store-intro">
-    <div class="store-cover" id="storeCover" role="img" aria-label="Selected Big Solis release artwork"></div>
-    <div class="store-panel">
-      <div class="eyebrow">Digital Download</div>
-      <h3 id="storeTitle">Quítame El Estres</h3>
-      <p>Buy directly from BIG SOLIS and choose what the music is worth to you. Once checkout is connected, your purchase will automatically unlock the digital download.</p>
 
-      <label for="releaseSelect" class="small">Choose a release</label>
-      <select class="release-select" id="releaseSelect">
-        <option value="estres">Quítame El Estres</option>
-        <option value="perdida">Perdida</option>
-        <option value="qtvb">QTVB (Que Te Vaya Bien)</option>
-        <option value="dqmq">Dice Que Me Quiere</option>
-      </select>
 
-      <div class="small">Choose your price</div>
-      <div class="amounts">
-        <button class="amount-btn" type="button" data-amount="1">$1</button>
-        <button class="amount-btn active" type="button" data-amount="5">$5</button>
-        <button class="amount-btn" type="button" data-amount="10">$10</button>
-        <button class="amount-btn" type="button" data-amount="20">$20</button>
-      </div>
 
-      <label for="customAmount" class="small">Or enter a custom amount</label>
-      <input class="custom-amount" id="customAmount" type="number" min="1" step="1" inputmode="decimal" placeholder="$ Custom amount">
-
-      <div class="buy-total"><span>Your price</span><strong id="buyPrice">$5.00</strong></div>
-      <button class="btn primary" id="checkoutBtn" type="button" disabled aria-disabled="true" style="width:100%;margin-top:18px;opacity:.65;cursor:not-allowed">Store Checkout Coming Soon</button>
-      <div class="shop-message" id="shopMessage" style="display:block">Pay-what-you-want downloads are being prepared. Streaming links are live now.</div>
-      <p class="checkout-note">The direct-download store will activate after a secure checkout provider is connected. No payment information is collected by elbigsolis.com right now.</p>
+<section id="watch" class="watch-section"><div class="wrap">
+  <div class="watch-grid">
+    <a class="video-feature" href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener" aria-label="Watch BIG SOLIS on YouTube">
+      <img src="assets/hero.webp" alt="BIG SOLIS featured video" loading="lazy">
+      <div class="video-play"><span>▶</span></div>
+      <div class="video-label">Featured video • Watch on YouTube</div>
+    </a>
+    <div class="watch-copy">
+      <div class="eyebrow">Watch</div>
+      <h2>See the music come alive.</h2>
+      <p>Music videos, visualizers, previews and behind-the-scenes moments from BIG SOLIS.</p>
+      <a class="btn primary" href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener">Watch on YouTube</a>
     </div>
   </div>
-
-  <div class="direct-benefits">
-    <div class="benefit"><strong>Pay what you want</strong><span>$1, $5, $10, $20 or a custom amount.</span></div>
-    <div class="benefit"><strong>Support BIG SOLIS directly</strong><span>Give fans a direct way to support the music beyond streaming.</span></div>
-    <div class="benefit"><strong>Digital download</strong><span>Built to deliver an MP3/WAV automatically after checkout.</span></div>
-  </div>
 </div></section>
+
 
 <section id="visuals"><div class="wrap">
   <div class="eyebrow">Visuals</div><h2 class="title">The world of<br>BIG SOLIS.</h2>
   <div class="gallery"><div class="g g1" role="img" aria-label="Big Solis Mexico jersey portrait"></div><div class="g g2" role="img" aria-label="Big Solis portrait"></div><div class="g g3" role="img" aria-label="Big Solis stairway visual"></div><div class="g g4" role="img" aria-label="Big Solis dark stairway visual"></div></div>
-  <a href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener"><div class="video-cta"><div><div class="play">▶</div><strong>WATCH ON YOUTUBE</strong><p style="color:#bbb;margin:8px 0 0">Music videos, visualizers, previews and more.</p></div></div></a>
+  
 </div></section>
+
+
+<section id="join" class="fan-signup">
+  <div class="wrap">
+    <div class="fan-signup-box">
+      <div class="eyebrow">Join La Familia</div>
+      <h2>Keep up with BIG SOLIS.</h2>
+      <p>Get new music, videos, release announcements and BIG SOLIS updates sent straight to your inbox.</p>
+      <form class="signup-form" action="#" method="post" onsubmit="event.preventDefault(); alert('Email signup is being connected. Check back soon!');">
+        <input type="email" name="email" placeholder="Enter your email address" aria-label="Email address" required>
+        <button class="btn primary" type="submit">JOIN THE LIST</button>
+      </form>
+      <p class="signup-note">No spam. Just music and BIG SOLIS updates.</p>
+    </div>
+  </div>
+</section>
+
 
 <section id="contact"><div class="wrap contact">
   <div><div class="eyebrow">Stay Connected</div><h2 class="title">Follow the journey.</h2><p style="color:#c4beb4">Stream the music, watch the visuals and follow BIG SOLIS for releases, previews and what comes next.</p>
