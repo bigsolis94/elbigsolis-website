@@ -183,6 +183,8 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
  .world-video-label{align-items:start;flex-direction:column}
 }
 
+
+.video-feature iframe{width:100%;height:100%;border:0;display:block}
 </style>
 </head>
 <body>
@@ -255,11 +257,13 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
 <section id="watch" class="watch-section"><div class="wrap">
   <div class="watch-grid">
-    <a class="video-feature" href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener" aria-label="Watch BIG SOLIS on YouTube">
-      <img src="assets/hero.webp" alt="BIG SOLIS featured video" loading="lazy">
-      <div class="video-play"><span>▶</span></div>
-      <div class="video-label">Featured video • Watch on YouTube</div>
-    </a>
+    <div class="video-feature"><iframe
+      src="https://www.youtube.com/embed/R1LiBCVI-Q8?rel=0"
+      title="BIG SOLIS Featured Video"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen></iframe></div>
     <div class="watch-copy">
       <div class="eyebrow">Watch</div>
       <h2>See the music come alive.</h2>
@@ -295,9 +299,13 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
   <div class="world-video">
     
-<iframe src="https://www.youtube.com/embed?listType=user_uploads&list=Big-Solis"
- title="BIG SOLIS featured video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
- allowfullscreen></iframe>
+<iframe
+      src="https://www.youtube.com/embed/R1LiBCVI-Q8?rel=0"
+      title="BIG SOLIS Featured Video"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen></iframe>
     <div class="world-video-label">
       <div><div class="eyebrow">Featured Visual</div><h3>Watch BIG SOLIS.</h3></div>
       <a class="btn" href="https://www.youtube.com/@Big-Solis" target="_blank" rel="noopener">More on YouTube</a>
