@@ -202,6 +202,29 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 .signup-status.error{color:#ff9b9b}
 .signup-form button:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
+
+.video-library{padding:88px 0;background:#070707;border-top:1px solid var(--line)}
+.video-library-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:28px}
+.video-library-head h2{font-size:clamp(42px,6vw,72px);line-height:.95;margin:8px 0 0}
+.video-library-head p{color:#aaa49a;max-width:520px}
+.video-main-wrap{background:#000;border:1px solid var(--line)}
+.video-main-wrap iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+.video-now{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:18px 2px 22px}
+.video-now strong{font-size:clamp(22px,3vw,34px)}
+.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.video-card{appearance:none;background:#0b0b0b;border:1px solid var(--line);padding:0;text-align:left;color:#fff;cursor:pointer;overflow:hidden;transition:.2s}
+.video-card:hover,.video-card.active{border-color:var(--yellow);transform:translateY(-2px)}
+.video-card img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#111}
+.video-card-copy{padding:13px 14px 15px}
+.video-card-kicker{font-size:9px;letter-spacing:1.4px;text-transform:uppercase;color:var(--yellow);font-weight:900}
+.video-card-title{font-size:15px;font-weight:800;margin-top:5px;line-height:1.2}
+@media(max-width:820px){
+  .video-library-head{display:block}
+  .video-library-head p{margin-top:12px}
+  .video-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:520px){.video-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -210,7 +233,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
     <a class="logo" href="#home" aria-label="Big Solis home"><img src="assets/top-left-logo.png" alt="Big Solis logo"></a>
     <button class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
     <div class="navlinks" id="navLinks">
-      <a href="#about">About</a><a href="#music">Music</a><a href="#presave">Pre-Save</a><a href="#watch">Watch</a>
+      <a href="#about">About</a><a href="#music">Music</a><a href="#presave">Pre-Save</a><a href="#watch">Watch</a><a href="#videos">Videos</a>
 <a href="#visuals">Visuals</a><a href="#join">Join</a><a href="#contact">Contact</a>
       <a class="nav-cta" href="#latest">Listen Now</a>
     </div>
@@ -319,6 +342,80 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
     </div>
   </div>
 </div></section>
+
+<section id="videos" class="video-library"><div class="wrap">
+  <div class="video-library-head">
+    <div>
+      <div class="eyebrow">Official Videos</div>
+      <h2>BIG SOLIS<br>Music Videos.</h2>
+    </div>
+    <p>Pick a video below and watch it right here on elbigsolis.com using the official YouTube player.</p>
+  </div>
+
+  <div class="video-main-wrap">
+    <iframe id="musicVideoPlayer"
+      src="https://www.youtube.com/embed/R1LiBCVI-Q8?rel=0"
+      title="Que Te Vaya Bien"
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen></iframe>
+  </div>
+
+  <div class="video-now">
+    <div>
+      <div class="eyebrow">Now Playing</div>
+      <strong id="musicVideoTitle">Que Te Vaya Bien</strong>
+    </div>
+    <a class="btn" id="musicVideoYoutubeLink" href="https://youtu.be/R1LiBCVI-Q8" target="_blank" rel="noopener">Open on YouTube</a>
+  </div>
+
+  <div class="video-grid">
+    <button class="video-card active" type="button" data-video="R1LiBCVI-Q8" data-title="Que Te Vaya Bien">
+      <img src="https://i.ytimg.com/vi/R1LiBCVI-Q8/hqdefault.jpg" alt="Que Te Vaya Bien video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Que Te Vaya Bien</div>
+      </div>
+    </button>
+<button class="video-card" type="button" data-video="3d6xZb6OwB8" data-title="Perdida">
+      <img src="https://i.ytimg.com/vi/3d6xZb6OwB8/hqdefault.jpg" alt="Perdida video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Perdida</div>
+      </div>
+    </button>
+<button class="video-card" type="button" data-video="hM60LMIfwUg" data-title="Me Hubiera Gustado">
+      <img src="https://i.ytimg.com/vi/hM60LMIfwUg/hqdefault.jpg" alt="Me Hubiera Gustado video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Me Hubiera Gustado</div>
+      </div>
+    </button>
+<button class="video-card" type="button" data-video="ZjjR2cdWpF4" data-title="Make It Big">
+      <img src="https://i.ytimg.com/vi/ZjjR2cdWpF4/hqdefault.jpg" alt="Make It Big video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Make It Big</div>
+      </div>
+    </button>
+<button class="video-card" type="button" data-video="kdFFhpXZNlk" data-title="Dice Que Me Quiere">
+      <img src="https://i.ytimg.com/vi/kdFFhpXZNlk/hqdefault.jpg" alt="Dice Que Me Quiere video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Dice Que Me Quiere</div>
+      </div>
+    </button>
+<button class="video-card" type="button" data-video="9Fad3GcNpFM" data-title="Pa Mi Raza">
+      <img src="https://i.ytimg.com/vi/9Fad3GcNpFM/hqdefault.jpg" alt="Pa Mi Raza video thumbnail" loading="lazy">
+      <div class="video-card-copy">
+        <div class="video-card-kicker">Music Video</div>
+        <div class="video-card-title">Pa Mi Raza</div>
+      </div>
+    </button>
+  </div>
+</div></section>
+
 
 
 
@@ -515,6 +612,31 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
       button.disabled = false;
       button.textContent = 'JOIN THE LIST';
     }
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  const player = document.getElementById('musicVideoPlayer');
+  const title = document.getElementById('musicVideoTitle');
+  const ytLink = document.getElementById('musicVideoYoutubeLink');
+  const cards = document.querySelectorAll('.video-card[data-video]');
+  if(!player || !cards.length) return;
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.video;
+      const name = card.dataset.title;
+      player.src = 'https://www.youtube.com/embed/' + encodeURIComponent(id) + '?rel=0&autoplay=1';
+      player.title = name;
+      title.textContent = name;
+      ytLink.href = 'https://youtu.be/' + id;
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      player.scrollIntoView({behavior:'smooth', block:'center'});
+    });
   });
 })();
 </script>
