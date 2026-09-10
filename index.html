@@ -455,7 +455,7 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 
 <script>
 (function(){
- const release=new Date('2026-09-11T00:00:00-07:00').getTime();
+ const release=new Date('2026-09-10T23:00:00-07:00').getTime();
  const d=document.getElementById('days'),h=document.getElementById('hours'),m=document.getElementById('minutes'),s=document.getElementById('seconds'),cta=document.getElementById('releaseCta'),badge=document.getElementById('releaseBadge');
  function pad(n){return String(n).padStart(2,'0')}
  function tick(){let x=release-Date.now();if(x<=0){d.textContent=h.textContent=m.textContent=s.textContent='00';badge.textContent='Out Now';cta.textContent='Out Now / Listen Now';cta.href='https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6';return}d.textContent=pad(Math.floor(x/86400000));x%=86400000;h.textContent=pad(Math.floor(x/3600000));x%=3600000;m.textContent=pad(Math.floor(x/60000));s.textContent=pad(Math.floor((x%60000)/1000))}
