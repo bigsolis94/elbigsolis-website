@@ -185,6 +185,17 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 
 
 .video-feature iframe{width:100%;height:100%;border:0;display:block}
+
+.presave-section{padding:96px 0;background:linear-gradient(180deg,#09090d,#0d0b12);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.presave-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center}
+.presave-art{position:relative}.presave-art img{width:100%;aspect-ratio:1;object-fit:cover;border:1px solid #2b2632;box-shadow:0 30px 80px #0009}
+.presave-badge{position:absolute;top:18px;left:18px;background:var(--yellow);color:#070707;padding:9px 12px;font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase}
+.presave-copy h2{font-size:clamp(44px,6.5vw,82px);line-height:.92;margin:10px 0 14px}.artist-line{font-size:17px;color:#c9c2d7}.release-date{font-size:13px;color:var(--yellow);letter-spacing:1.6px;text-transform:uppercase;font-weight:800;margin:8px 0 24px}
+.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:22px 0}.count-box{background:#0a0a0d;border:1px solid #2a2730;padding:16px 8px;text-align:center}.count-box strong{display:block;font-size:clamp(28px,4vw,46px);line-height:1}.count-box span{display:block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#8e8897;margin-top:7px}
+.preview-player{margin:22px 0 26px;padding:18px;border:1px solid #2a2730;background:#08080a}.preview-top{display:flex;align-items:center;gap:14px}.preview-play{width:48px;height:48px;border-radius:50%;border:0;background:var(--yellow);color:#080808;font-weight:900;cursor:pointer}.preview-info{flex:1}.preview-title{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;font-weight:900}.preview-time{font-size:11px;color:#888;margin-top:3px}.preview-bar{width:100%;accent-color:var(--yellow);cursor:pointer;margin-top:12px}
+.presave-desc{color:#bdb6c8;font-size:16px;max-width:620px;margin-bottom:22px}
+@media(max-width:820px){.presave-grid{grid-template-columns:1fr}.countdown{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
@@ -193,7 +204,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
     <a class="logo" href="#home" aria-label="Big Solis home"><img src="assets/top-left-logo.png" alt="Big Solis logo"></a>
     <button class="menu" id="menuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
     <div class="navlinks" id="navLinks">
-      <a href="#about">About</a><a href="#music">Music</a><a href="#watch">Watch</a>
+      <a href="#about">About</a><a href="#music">Music</a><a href="#presave">Pre-Save</a><a href="#watch">Watch</a>
 <a href="#visuals">Visuals</a><a href="#join">Join</a><a href="#contact">Contact</a>
       <a class="nav-cta" href="#latest">Listen Now</a>
     </div>
@@ -228,6 +239,36 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
   </div>
 </div></section>
 
+
+
+<section id="presave" class="presave-section"><div class="wrap presave-grid">
+  <div class="presave-art">
+    <img src="assets/you-know-i-lose-control.webp" alt="You Know I Lose Control cover artwork">
+    <div class="presave-badge" id="releaseBadge">Coming Soon</div>
+  </div>
+  <div class="presave-copy">
+    <div class="eyebrow">Next Release</div>
+    <h2>You Know I Lose Control</h2>
+    <div class="artist-line">Dylan Garcia ft. BIG SOLIS</div>
+    <div class="release-date">September 11, 2026</div>
+    <div class="countdown">
+      <div class="count-box"><strong id="days">00</strong><span>Days</span></div>
+      <div class="count-box"><strong id="hours">00</strong><span>Hours</span></div>
+      <div class="count-box"><strong id="minutes">00</strong><span>Minutes</span></div>
+      <div class="count-box"><strong id="seconds">00</strong><span>Seconds</span></div>
+    </div>
+    <div class="preview-player">
+      <audio id="songPreview" preload="metadata" src="assets/you-know-i-lose-control-preview.mp3"></audio>
+      <div class="preview-top">
+        <button class="preview-play" id="previewPlay" type="button" aria-label="Play preview">▶</button>
+        <div class="preview-info"><div class="preview-title">30 Second Preview</div><div class="preview-time" id="previewTime">0:00 / 0:30</div></div>
+      </div>
+      <input class="preview-bar" id="previewBar" type="range" min="0" max="30" value="0" step=".1" aria-label="Audio preview position">
+    </div>
+    <p class="presave-desc">Hear a preview, then pre-save it now so it’s ready in your library when it drops.</p>
+    <div class="btns"><a class="btn primary" id="releaseCta" href="https://hypeddit.com/dylangarcia/youknowilosecontrol" target="_blank" rel="noopener">Pre-Save Now</a></div>
+  </div>
+</div></section>
 
 <section id="about"><div class="wrap about">
   <div class="about-photo" role="img" aria-label="Big Solis writing music"></div>
@@ -402,5 +443,23 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
   else { msg.style.display='block'; }
 });}
 </script>
+
+<script>
+(function(){
+ const release=new Date('2026-09-11T00:00:00-07:00').getTime();
+ const d=document.getElementById('days'),h=document.getElementById('hours'),m=document.getElementById('minutes'),s=document.getElementById('seconds'),cta=document.getElementById('releaseCta'),badge=document.getElementById('releaseBadge');
+ function pad(n){return String(n).padStart(2,'0')}
+ function tick(){let x=release-Date.now();if(x<=0){d.textContent=h.textContent=m.textContent=s.textContent='00';badge.textContent='Out Now';cta.textContent='Out Now / Listen Now';cta.href='https://open.spotify.com/artist/45Jou7pY6R6PE9lo470Zn6';return}d.textContent=pad(Math.floor(x/86400000));x%=86400000;h.textContent=pad(Math.floor(x/3600000));x%=3600000;m.textContent=pad(Math.floor(x/60000));s.textContent=pad(Math.floor((x%60000)/1000))}
+ tick();setInterval(tick,1000);
+ const a=document.getElementById('songPreview'),p=document.getElementById('previewPlay'),bar=document.getElementById('previewBar'),time=document.getElementById('previewTime');
+ function fmt(v){v=Math.max(0,Math.floor(v||0));return Math.floor(v/60)+':'+String(v%60).padStart(2,'0')}
+ p.addEventListener('click',()=>{if(a.paused)a.play();else a.pause()});
+ a.addEventListener('play',()=>p.textContent='❚❚');a.addEventListener('pause',()=>p.textContent='▶');
+ a.addEventListener('timeupdate',()=>{bar.value=Math.min(30,a.currentTime);time.textContent=fmt(a.currentTime)+' / 0:30'});
+ a.addEventListener('ended',()=>{p.textContent='▶';bar.value=0;time.textContent='0:00 / 0:30'});
+ bar.addEventListener('input',()=>{a.currentTime=bar.value});
+})();
+</script>
+
 </body>
 </html>
