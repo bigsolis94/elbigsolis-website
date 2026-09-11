@@ -80,7 +80,6 @@ Enter a test email in "Join La Familia". You should see:
 **You’re in. Welcome to La Familia.**
 
 ## Important
-D1 database binding enabled.
+
 This stores subscribers, but it does not send newsletters yet.
 Later, an email delivery service can use this list while the subscriber database remains yours.
-Redeploy after D1 binding.
