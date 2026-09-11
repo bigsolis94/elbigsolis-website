@@ -54,3 +54,4 @@ Enter the same ADMIN_TOKEN.
 ## Security note
 
 This is suitable for a simple private artist dashboard because the secret remains server-side and is only submitted when you log in. For stronger account-based access later, Cloudflare Access can be added in front of `/admin/*`.
+Admin token enabled.
