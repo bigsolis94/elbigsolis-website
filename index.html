@@ -519,5 +519,45 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 })();
 </script>
 
+<script>
+(function () {
+  const UPDATE_INTERVAL = 30 * 60 * 1000;
+
+  async function updateLatestVideo() {
+    try {
+      const response = await fetch('/api/latest-video', {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      if (!data.videoId ||
+          !/^[a-zA-Z0-9_-]{11}$/.test(data.videoId)) return;
+
+      const videoUrl =
+        'https://www.youtube.com/embed/' +
+        data.videoId + '?rel=0';
+
+      document.querySelectorAll(
+        '.video-feature iframe, .world-video iframe'
+      ).forEach(frame => {
+        const currentId =
+          frame.src.match(/\/embed\/([^?]+)/)?.[1];
+
+        if (currentId !== data.videoId) {
+          frame.src = videoUrl;
+        }
+      });
+    } catch (error) {
+      console.warn('Video update unavailable:', error);
+    }
+  }
+
+  updateLatestVideo();
+  setInterval(updateLatestVideo, UPDATE_INTERVAL);
+})();
+</script>
+
 </body>
 </html>
