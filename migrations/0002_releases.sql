@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS music_releases (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ title TEXT NOT NULL,
+ artist TEXT NOT NULL DEFAULT 'BIG SOLIS',
+ cover_url TEXT NOT NULL DEFAULT '',
+ release_at TEXT NOT NULL,
+ presave_url TEXT NOT NULL DEFAULT '',
+ spotify_url TEXT NOT NULL DEFAULT '',
+ apple_url TEXT NOT NULL DEFAULT '',
+ youtube_url TEXT NOT NULL DEFAULT '',
+ preview_url TEXT NOT NULL DEFAULT '',
+ featured INTEGER NOT NULL DEFAULT 0,
+ published INTEGER NOT NULL DEFAULT 1,
+ created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_music_releases_public ON music_releases(published, release_at DESC);
