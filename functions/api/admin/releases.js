@@ -6,7 +6,7 @@ function validate(v){
  const r={};
  for(const k of keys){if(typeof v[k]!=='string')throw Error('Invalid '+k);r[k]=v[k].trim();if(r[k].length>1000)throw Error(k+' too long');}
  if(!r.title||r.title.length>180||!r.artist||r.artist.length>180)throw Error('Title and artist are required');
- if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/.test(r.release_at)||!Number.isFinite(Date.parse(r.release_at)))throw Error('Release date must include a timezone');
+ if(!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(r.release_at)||!Number.isFinite(Date.parse(r.release_at)))throw Error('Release date must include a timezone');
  for(const k of keys.filter(k=>k.endsWith('_url'))){if(r[k]){let u;try{u=new URL(r[k]);}catch{throw Error('Invalid '+k)}if(u.protocol!=='https:')throw Error('Only HTTPS URLs are allowed');}}
  r.featured=v.featured===true?1:0;r.published=v.published===false?0:1;
  return r;
