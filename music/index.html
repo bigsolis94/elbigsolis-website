@@ -114,6 +114,23 @@ async function load() {
 
       const audio = el('audio');
       audio.controls = true;
+      
+let playRecorded = false;
+
+audio.addEventListener('playing', () => {
+  if (playRecorded) return;
+
+  playRecorded = true;
+
+  fetch('/api/studio/play', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id: t.id})
+  }).catch(() => {
+    playRecorded = false;
+  });
+});
+
       audio.preload = 'none';
       audio.src = '/api/studio/audio?id=' + t.id;
 
