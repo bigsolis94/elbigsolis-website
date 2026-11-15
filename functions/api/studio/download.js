@@ -13,6 +13,16 @@ export async function onRequestGet({request,env}){
  const s=await res.json();
  if(s.payment_status!=='paid'||s.mode!=='payment'||s.client_reference_id!=='big-solis-studio-v1'||s.metadata?.track_id!==String(id)||!Number.isSafeInteger(s.amount_total)||s.amount_total<Math.max(100,row.price_min_cents)||s.currency!=='usd')return new Response('Payment not verified',{status:403});
  const obj=await env.MUSIC_BUCKET.get(row.object_key);if(!obj)return new Response('Not found',{status:404});
+ // Record successful authorized download requests.
+ try {
+   await env.DB.prepare(
+     `INSERT INTO studio_events (upload_id, event_type)
+      VALUES (?, 'download')`
+   ).bind(id).run();
+ } catch (error) {
+   console.error('Download tracking failed:', error);
+ }
+
  const filename=row.filename.replace(/["\\\r\n]/g,'_');
  return new Response(obj.body,{headers:{'Content-Type':row.content_type,'Content-Disposition':`attachment; filename="${filename}"`,'Cache-Control':'private, no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff'}});
 }
