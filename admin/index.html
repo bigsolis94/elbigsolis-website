@@ -71,7 +71,7 @@ h1{font-size:clamp(38px,6vw,68px);line-height:.95;margin:8px 0 12px}.sub{color:v
 
     <div class="tablewrap">
       <table>
-        <thead><tr><th>Email</th><th>Status</th><th>Source</th><th>Joined</th></tr></thead>
+        <thead><tr><th>Email</th><th>Status</th><th>Source</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
       <div id="empty" class="empty" style="display:none">No subscribers found.</div>
@@ -171,7 +171,46 @@ async function loadData(q=''){
     const status=document.createElement('td'); status.innerHTML='<span class="pill"></span>'; status.firstChild.textContent=s.status;
     const source=document.createElement('td'); source.textContent=s.source||'website';
     const joined=document.createElement('td'); joined.textContent=fmtDate(s.created_at);
-    tr.append(email,status,source,joined); rows.appendChild(tr);
+    const actions=document.createElement('td');
+    const deleteButton=document.createElement('button');
+    deleteButton.type='button';
+    deleteButton.className='secondary';
+    deleteButton.textContent='Delete';
+    deleteButton.setAttribute('aria-label','Delete subscriber '+s.email);
+    deleteButton.addEventListener('click',async()=>{
+      if(!confirm('Permanently delete '+s.email+' from your fan list? This cannot be undone.'))return;
+      deleteButton.disabled=true;
+      dashStatus.textContent='Deleting subscriber...';
+      dashStatus.className='status';
+      try{
+        const response=await fetch('/api/admin/subscribers',{
+          method:'DELETE',
+          headers:{
+            Authorization:'Bearer '+getToken(),
+            'Content-Type':'application/json'
+          },
+          body:JSON.stringify({id:s.id})
+        });
+        const result=await response.json().catch(()=>({}));
+        if(response.status===401){
+          clearToken();showLogin();
+          loginStatus.textContent='Your admin token is not valid.';
+          loginStatus.className='status error';
+          return;
+        }
+        if(!response.ok)throw new Error(result.error||'Could not delete subscriber.');
+        await loadData(search.value);
+        dashStatus.textContent='Subscriber deleted successfully.';
+        dashStatus.className='status success';
+      }catch(error){
+        dashStatus.textContent=error.message;
+        dashStatus.className='status error';
+      }finally{
+        deleteButton.disabled=false;
+      }
+    });
+    actions.appendChild(deleteButton);
+    tr.append(email,status,source,joined,actions); rows.appendChild(tr);
   });
   empty.style.display=(data.subscribers||[]).length?'none':'block';
   dashStatus.textContent='';
