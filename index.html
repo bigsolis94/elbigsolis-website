@@ -475,17 +475,51 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 (function(){
   const form = document.getElementById('fanSignupForm');
   const email = document.getElementById('fanEmail');
+
+<script>
+(function () {
+  const form = document.getElementById('fanSignupForm');
+  const email = document.getElementById('fanEmail');
   const button = document.getElementById('fanSignupButton');
   const status = document.getElementById('fanSignupStatus');
 
   if (!form) return;
 
+  let widgetId = null;
+
+  function initializeTurnstile() {
+    if (!window.turnstile) {
+      setTimeout(initializeTurnstile, 200);
+      return;
+    }
+
+    widgetId = window.turnstile.render('#fanTurnstile', {
+      sitekey: '0x4AAAAAAGF5flXHt_JSVTxY'
+    });
+  }
+
+  initializeTurnstile();
+
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    const value = email.value.trim();
     status.className = 'signup-status';
     status.textContent = '';
+
+    if (widgetId === null || !window.turnstile) {
+      status.className = 'signup-status error';
+      status.textContent = 'Security verification is loading. Please wait.';
+      return;
+    }
+
+    const token = window.turnstile.getResponse(widgetId);
+
+    if (!token) {
+      status.className = 'signup-status error';
+      status.textContent = 'Please complete the security verification.';
+      return;
+    }
+
     button.disabled = true;
     button.textContent = 'JOINING...';
 
@@ -494,24 +528,27 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
-          email: value,
-          source: 'elbigsolis.com'
+          email: email.value.trim(),
+          source: 'elbigsolis.com',
+          turnstileToken: token
         })
       });
 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong. Please try again.');
+        throw new Error(data.error || 'Something went wrong.');
       }
 
       status.className = 'signup-status success';
-      status.textContent = data.message || 'You’re in. Welcome to La Familia.';
+      status.textContent = data.message || 'Welcome to La Familia!';
       form.reset();
+
     } catch (error) {
       status.className = 'signup-status error';
-      status.textContent = error.message || 'Something went wrong. Please try again.';
+      status.textContent = error.message || 'Please try again.';
     } finally {
+      window.turnstile.reset(widgetId);
       button.disabled = false;
       button.textContent = 'JOIN THE LIST';
     }
@@ -519,9 +556,6 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 })();
 </script>
 
-<script>
-(function () {
-  const UPDATE_INTERVAL = 30 * 60 * 1000;
 
   async function updateLatestVideo() {
     try {
