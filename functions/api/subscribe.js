@@ -65,7 +65,7 @@ export async function onRequestPost(context) {
     const ip =
       request.headers.get("CF-Connecting-IP") || "";
 
-    // Preserve existing signup rate limit.
+    // Preserve the existing signup rate limit.
     if (ip) {
       const recent = await env.DB.prepare(
         `SELECT COUNT(*) AS total
@@ -87,7 +87,7 @@ export async function onRequestPost(context) {
       ).bind(ip).run();
     }
 
-    // Verify Turnstile on Cloudflare's servers.
+    // Verify Cloudflare Turnstile.
     const form = new FormData();
     form.append("secret", env.TURNSTILE_SECRET_KEY);
     form.append("response", token);
@@ -116,6 +116,7 @@ export async function onRequestPost(context) {
 
     } catch (error) {
       console.error("Turnstile verification unavailable", error);
+
       return json({
         error: "Security verification is temporarily unavailable."
       }, 503);
@@ -127,7 +128,6 @@ export async function onRequestPost(context) {
       }, 403);
     }
 
-    // Accept only tokens issued for our website.
     const allowedHostnames = [
       "elbigsolis.com",
       "www.elbigsolis.com"
@@ -139,7 +139,7 @@ export async function onRequestPost(context) {
       }, 403);
     }
 
-    // Check existing subscribers.
+    // Check for an existing subscriber.
     const existing = await env.DB.prepare(
       "SELECT id FROM subscribers WHERE email = ? LIMIT 1"
     ).bind(email).first();
@@ -152,13 +152,28 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Store verified subscriber.
-    await env.DB.prepare(
-      `INSERT INTO subscribers
-       (email, source, status, created_at, consent_at)
-       VALUES (?, ?, 'subscribed',
-       datetime('now'), datetime('now'))`
-    ).bind(email, source).run();
+    // Save subscriber and activity together.
+    // A transaction-style batch prevents a successful signup
+    // from being recorded without its activity entry.
+    await env.DB.batch([
+      env.DB.prepare(
+        `INSERT INTO subscribers
+         (email, source, status, created_at, consent_at)
+         VALUES (?, ?, 'subscribed',
+         datetime('now'), datetime('now'))`
+      ).bind(email, source),
+
+      env.DB.prepare(
+        `INSERT INTO subscriber_activity
+         (subscriber_id, email, action, created_at)
+         VALUES (
+           (SELECT id FROM subscribers WHERE email = ? LIMIT 1),
+           ?,
+           'subscribed',
+           CURRENT_TIMESTAMP
+         )`
+      ).bind(email, email)
+    ]);
 
     return json({
       ok: true,
