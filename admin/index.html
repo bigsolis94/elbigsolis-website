@@ -287,5 +287,225 @@ if(getToken()){
   loadMusicAnalytics();
 }
 </script>
+<!-- BIG SOLIS SUBSCRIBER ACTIVITY -->
+<style>
+#subscriberActivityPanel {
+  margin: 28px 0;
+  padding: 24px;
+  background: #101010;
+  border: 1px solid #29261d;
+}
+#subscriberActivityPanel h2 {
+  margin: 8px 0 12px;
+}
+#subscriberActivityPanel .activity-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+#subscriberActivityPanel .activity-table {
+  overflow-x: auto;
+  margin-top: 16px;
+  border: 1px solid #29261d;
+}
+#subscriberActivityPanel table {
+  width: 100%;
+  min-width: 500px;
+  border-collapse: collapse;
+}
+#subscriberActivityPanel th,
+#subscriberActivityPanel td {
+  padding: 13px;
+  text-align: left;
+  border-bottom: 1px solid #29261d;
+}
+#subscriberActivityPanel .activity-note {
+  color: #98948c;
+  font-size: 12px;
+  margin-top: 12px;
+}
+</style>
+
+<section id="subscriberActivityPanel"
+         style="display:none">
+  <div class="eyebrow">LA FAMILIA</div>
+
+  <div class="activity-top">
+    <h2>Subscriber Activity</h2>
+    <button class="secondary"
+            type="button"
+            id="refreshSubscriberActivity">
+      Refresh Activity
+    </button>
+  </div>
+
+  <p class="sub">
+    Recent subscriber signups and deletions.
+  </p>
+
+  <div id="subscriberActivityStatus"
+       class="status"
+       role="status"
+       aria-live="polite"></div>
+
+  <div class="activity-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Action</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="subscriberActivityRows"></tbody>
+    </table>
+  </div>
+
+  <p class="activity-note">
+    Displays the latest 100 recorded events.
+  </p>
+</section>
+
+<script>
+(function () {
+  const panel = document.getElementById(
+    'subscriberActivityPanel'
+  );
+
+  const status = document.getElementById(
+    'subscriberActivityStatus'
+  );
+
+  const body = document.getElementById(
+    'subscriberActivityRows'
+  );
+
+  const refreshButton = document.getElementById(
+    'refreshSubscriberActivity'
+  );
+
+  // Move activity panel into existing dashboard.
+  const fanTable = document.querySelector(
+    '#dashboard .tablewrap'
+  );
+
+  if (fanTable) {
+    fanTable.insertAdjacentElement('afterend', panel);
+    panel.style.display = 'block';
+  }
+
+  async function loadSubscriberActivity() {
+    const token = sessionStorage.getItem(
+      'bigsolis_admin_token'
+    );
+
+    if (!token) return;
+
+    status.textContent = 'Loading activity...';
+    status.className = 'status';
+    refreshButton.disabled = true;
+
+    try {
+      const response = await fetch(
+        '/api/admin/subscriber-activity',
+        {
+          headers: {
+            Authorization: 'Bearer ' + token
+          },
+          cache: 'no-store'
+        }
+      );
+
+      const data = await response.json()
+        .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || 'Unable to load activity.'
+        );
+      }
+
+      body.replaceChildren();
+
+      const activity = data.activity || [];
+
+      if (!activity.length) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+
+        td.colSpan = 3;
+        td.textContent =
+          'No recorded subscriber activity yet.';
+
+        tr.appendChild(td);
+        body.appendChild(tr);
+      }
+
+      activity.forEach(record => {
+        const tr = document.createElement('tr');
+
+        const email = document.createElement('td');
+        email.textContent = record.email || '—';
+
+        const action = document.createElement('td');
+        action.textContent = record.action || '—';
+
+        const date = document.createElement('td');
+
+        if (record.created_at) {
+          const raw = record.created_at;
+          const iso = raw.includes('T')
+            ? raw
+            : raw.replace(' ', 'T') + 'Z';
+
+          const parsed = new Date(iso);
+
+          date.textContent = Number.isNaN(
+            parsed.getTime()
+          ) ? raw : parsed.toLocaleString();
+        } else {
+          date.textContent = '—';
+        }
+
+        tr.append(email, action, date);
+        body.appendChild(tr);
+      });
+
+      status.textContent =
+        activity.length + ' activity records loaded.';
+
+      status.className = 'status success';
+
+    } catch (error) {
+      status.textContent = error.message;
+      status.className = 'status error';
+    } finally {
+      refreshButton.disabled = false;
+    }
+  }
+
+  refreshButton.addEventListener(
+    'click',
+    loadSubscriberActivity
+  );
+
+  // Load activity when an existing session is open.
+  if (sessionStorage.getItem(
+    'bigsolis_admin_token'
+  )) {
+    loadSubscriberActivity();
+  }
+
+  // Load activity after logging in.
+  document.getElementById('loginForm')
+    .addEventListener('submit', () => {
+      setTimeout(loadSubscriberActivity, 800);
+    });
+})();
+</script>
+<!-- END SUBSCRIBER ACTIVITY -->
+
 </body>
 </html>
