@@ -25,6 +25,11 @@ h1{font-size:clamp(38px,6vw,68px);line-height:.95;margin:8px 0 12px}.sub{color:v
 @media(max-width:720px){.stats{grid-template-columns:1fr}.toolbar{align-items:stretch;flex-direction:column}.search{max-width:none;width:100%}.secondary{text-align:center}}
 
 .release-manager{margin-top:48px;border-top:1px solid var(--line);padding-top:32px}.release-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;background:var(--panel);padding:20px;border:1px solid var(--line)}.release-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}.release-form input{width:100%;padding:11px;background:#080808;border:1px solid #393529;color:#fff}.release-form .wide{grid-column:1/-1}.release-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.release-list{display:grid;gap:10px;margin-top:16px}.release-item{border:1px solid var(--line);padding:14px;display:flex;justify-content:space-between;gap:14px;align-items:center}.release-item small{display:block;color:var(--muted)}@media(max-width:720px){.release-form{grid-template-columns:1fr}}
+
+.analytics{margin:28px 0 36px;padding:24px;background:var(--panel);border:1px solid var(--line)}
+.analytics h2{margin:8px 0}.analytics .stats{grid-template-columns:repeat(2,minmax(0,1fr));margin:18px 0}
+.analytics .tablewrap table{min-width:440px}.analytics-note{font-size:12px;color:var(--muted)}
+@media(max-width:600px){.analytics .stats{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -72,6 +77,23 @@ h1{font-size:clamp(38px,6vw,68px);line-height:.95;margin:8px 0 12px}.sub{color:v
       <div id="empty" class="empty" style="display:none">No subscribers found.</div>
     </div>
     <section style="margin:26px 0;padding:22px;background:#151515;border:1px solid #393124"><div class="eyebrow">BIG SOLIS STUDIO</div><h2>Private Music Uploads</h2><p class="sub">Upload MP3 and WAV tracks from your phone or computer.</p><a class="btn" style="display:inline-block;text-decoration:none" href="/admin/uploads/">Open Music Uploader</a></section>
+
+    <section class="analytics" aria-labelledby="analyticsHeading">
+      <div class="eyebrow">BIG SOLIS STUDIO</div>
+      <h2 id="analyticsHeading">Music Vault Analytics</h2>
+      <p class="sub">Track plays and authorized download requests recorded by your website.</p>
+      <button class="secondary" type="button" id="refreshAnalytics">Refresh Music Stats</button>
+      <div id="analyticsStatus" class="status" role="status" aria-live="polite"></div>
+      <div class="stats">
+        <div class="stat"><b id="musicPlays">—</b><span>Total Recorded Plays</span></div>
+        <div class="stat"><b id="musicDownloads">—</b><span>Authorized Download Requests</span></div>
+      </div>
+      <h3>Performance by song</h3>
+      <div class="tablewrap"><table><thead><tr><th>Song</th><th>Plays</th><th>Downloads</th></tr></thead><tbody id="musicRows"></tbody></table></div>
+      <h3>Last 30 days (UTC)</h3>
+      <div class="tablewrap"><table><thead><tr><th>Day</th><th>Plays</th><th>Downloads</th></tr></thead><tbody id="musicDailyRows"></tbody></table></div>
+      <p class="analytics-note">These are recorded events, not unique listeners, verified completed file transfers, or sales. Sandbox activity may be included. Revenue will be added after live Stripe payment reporting is verified.</p>
+    </section>
     <section class="release-manager"><div class="eyebrow">Music</div><h2>Release Manager</h2><p class="sub">Add a release once. The website switches from pre-save to listen links at the scheduled time. Use the date and time in your local timezone.</p>
     <form id="releaseForm" class="release-form">
       <label>Song title<input name="title" required maxlength="180"></label>
@@ -162,7 +184,7 @@ loginForm.addEventListener('submit',async e=>{
   setToken(t);
   loginStatus.textContent='Checking...'; loginStatus.className='status';
   try{
-    showDashboard(); await loadData(); await loadReleases();
+    showDashboard(); await loadData(); await loadReleases(); await loadMusicAnalytics();
     loginStatus.textContent='';
   }catch(err){
     if(err.message!=='Unauthorized'){
@@ -187,6 +209,28 @@ document.getElementById('export').addEventListener('click',async()=>{
   }catch(e){dashStatus.textContent=e.message;dashStatus.className='status error'}
 });
 
+
+async function loadMusicAnalytics(){
+ const status=document.getElementById('analyticsStatus');
+ status.textContent='Loading music statistics...';status.className='status';
+ try{
+  const r=await fetch('/api/admin/analytics',{headers:{Authorization:'Bearer '+getToken()},cache:'no-store'});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw Error(d.error||'Could not load music analytics');
+  document.getElementById('musicPlays').textContent=Number(d.totals?.plays||0).toLocaleString();
+  document.getElementById('musicDownloads').textContent=Number(d.totals?.downloads||0).toLocaleString();
+  const fill=(id,records,fields)=>{
+   const body=document.getElementById(id);body.replaceChildren();
+   if(!records.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=fields.length;td.textContent='No data yet';tr.append(td);body.append(tr);return}
+   for(const record of records){const tr=document.createElement('tr');for(const field of fields){const td=document.createElement('td');td.textContent=field==='plays'||field==='downloads'?Number(record[field]||0).toLocaleString():String(record[field]??'');tr.append(td)}body.append(tr)}
+  };
+  fill('musicRows',d.tracks||[],['title','plays','downloads']);
+  fill('musicDailyRows',d.daily||[],['day','plays','downloads']);
+  status.textContent='Music statistics updated.';status.className='status success';
+ }catch(e){status.textContent=e.message;status.className='status error'}
+}
+document.getElementById('refreshAnalytics').addEventListener('click',loadMusicAnalytics);
+
 let releaseRecords=[],editingRelease=null;
 const releaseForm=document.getElementById('releaseForm'),releaseStatus=document.getElementById('releaseStatus'),releaseList=document.getElementById('releaseList');
 function showReleaseError(e){releaseStatus.textContent=e.message||String(e);releaseStatus.className='error'}
@@ -201,6 +245,7 @@ if(getToken()){
   showDashboard();
   loadData().catch(()=>{});
   loadReleases().catch(showReleaseError);
+  loadMusicAnalytics();
 }
 </script>
 </body>
