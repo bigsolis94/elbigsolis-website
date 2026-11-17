@@ -203,6 +203,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
 .signup-form button:disabled{opacity:.6;cursor:not-allowed;transform:none}
 
 </style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
 </head>
 <body>
 <nav>
@@ -391,6 +392,7 @@ section{padding:76px 0}.about,.latest,.contact{grid-template-columns:1fr}.about-
   <input type="email" id="fanEmail" name="email" placeholder="Enter your email address" aria-label="Email address" autocomplete="email" required>
   <button class="btn primary" id="fanSignupButton" type="submit">JOIN THE LIST</button>
 </form>
+<div id="fanTurnstile" style="display:flex;justify-content:center;margin:18px auto;"></div>
 <p class="signup-note">No spam. Just music and BIG SOLIS updates.</p>
 <div class="signup-status" id="fanSignupStatus" role="status" aria-live="polite"></div>
 
@@ -413,44 +415,6 @@ const btn=document.getElementById('menuBtn'), nav=document.getElementById('navLi
 btn.addEventListener('click',()=>{const open=nav.classList.toggle('open');btn.setAttribute('aria-expanded',open);btn.textContent=open?'✕':'☰';});
 document.querySelectorAll('#navLinks a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');btn.setAttribute('aria-expanded','false');btn.textContent='☰';}));
 
-const releases={
-  estres:{title:'Quítame El Estres',cover:'assets/estres.webp',checkout:''},
-  perdida:{title:'Perdida',cover:'assets/perdida.webp',checkout:''},
-  qtvb:{title:'QTVB (Que Te Vaya Bien)',cover:'assets/qtvb.webp',checkout:''},
-  dqmq:{title:'Dice Que Me Quiere',cover:'assets/dqmq.webp',checkout:''}
-};
-let selectedAmount=5;
-const price=document.getElementById('buyPrice');
-const custom=document.getElementById('customAmount');
-const releaseSelect=document.getElementById('releaseSelect');
-const storeCover=document.getElementById('storeCover');
-const storeTitle=document.getElementById('storeTitle');
-const msg=document.getElementById('shopMessage');
-
-function setAmount(n){
-  selectedAmount=Math.max(1,Number(n)||1);
-  price.textContent='$'+selectedAmount.toFixed(2);
-}
-document.querySelectorAll('.amount-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.amount-btn').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); custom.value=''; setAmount(b.dataset.amount);
-}));
-custom.addEventListener('input',()=>{
-  document.querySelectorAll('.amount-btn').forEach(x=>x.classList.remove('active'));
-  if(custom.value) setAmount(custom.value);
-});
-releaseSelect.addEventListener('change',()=>{
-  const r=releases[releaseSelect.value];
-  storeTitle.textContent=r.title;
-  storeCover.style.backgroundImage=`url('${r.cover}')`;
-  msg.style.display='none';
-});
-const checkoutBtn=document.getElementById('checkoutBtn');
-if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
-  const r=releases[releaseSelect.value];
-  if(r.checkout){ window.open(r.checkout,'_blank','noopener'); }
-  else { msg.style.display='block'; }
-});}
 </script>
 
 <script>
@@ -470,11 +434,6 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 })();
 </script>
 
-
-<script>
-(function(){
-  const form = document.getElementById('fanSignupForm');
-  const email = document.getElementById('fanEmail');
 
 <script>
 (function () {
@@ -557,37 +516,24 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
 </script>
 
 
+<script>
+(function () {
+  const UPDATE_INTERVAL = 5 * 60 * 1000;
   async function updateLatestVideo() {
     try {
-      const response = await fetch('/api/latest-video', {
-        cache: 'no-store'
-      });
-
+      const response = await fetch('/api/latest-video', { cache: 'no-store' });
       if (!response.ok) return;
-
       const data = await response.json();
-      if (!data.videoId ||
-          !/^[a-zA-Z0-9_-]{11}$/.test(data.videoId)) return;
-
-      const videoUrl =
-        'https://www.youtube.com/embed/' +
-        data.videoId + '?rel=0';
-
-      document.querySelectorAll(
-        '.video-feature iframe, .world-video iframe'
-      ).forEach(frame => {
-        const currentId =
-          frame.src.match(/\/embed\/([^?]+)/)?.[1];
-
-        if (currentId !== data.videoId) {
-          frame.src = videoUrl;
-        }
+      if (!data.videoId || !/^[a-zA-Z0-9_-]{11}$/.test(data.videoId)) return;
+      const videoUrl = 'https://www.youtube.com/embed/' + data.videoId + '?rel=0';
+      document.querySelectorAll('.video-feature iframe, .world-video iframe').forEach(frame => {
+        const currentId = frame.src.match(/\/embed\/([^?]+)/)?.[1];
+        if (currentId !== data.videoId) frame.src = videoUrl;
       });
     } catch (error) {
       console.warn('Video update unavailable:', error);
     }
   }
-
   updateLatestVideo();
   setInterval(updateLatestVideo, UPDATE_INTERVAL);
 })();
@@ -602,7 +548,7 @@ if(!checkoutBtn.disabled){checkoutBtn.addEventListener('click',()=>{
  function link(label,url){const u=safeUrl(url);if(!u)return null;const a=node('a','',label);a.href=u;a.target='_blank';a.rel='noopener noreferrer';return a}
  function card(r){const el=node('article','release');const art=node('div','cover');const url=safeUrl(r.cover_url);if(url){const img=node('img');img.src=url;img.alt=r.title+' cover';img.loading='lazy';art.append(img)}el.append(art,node('h3','',r.title),node('p','',r.artist+' • '+new Date(r.release_at).getFullYear()));const links=node('div','release-links');const released=Date.now()>=Date.parse(r.release_at);for(const [label,u] of (released?[['Spotify',r.spotify_url],['Apple Music',r.apple_url],['YouTube',r.youtube_url]]:[['Pre-save',r.presave_url]])){const a=link(label+' →',u);if(a)links.append(a)}el.append(links);return el}
  function featured(r){const section=document.getElementById('latest-release');if(!section)return;const title=section.querySelector('h2'),art=section.querySelector('.featured-release-art img'),meta=section.querySelector('.meta'),buttons=section.querySelector('.btns');if(title)title.textContent=r.title;if(meta)meta.textContent=r.artist;if(art&&safeUrl(r.cover_url)){art.src=safeUrl(r.cover_url);art.alt=r.title+' cover'}if(buttons){buttons.replaceChildren();for(const [label,u] of [['Listen on Spotify',r.spotify_url],['Apple Music',r.apple_url],['YouTube',r.youtube_url]]){const a=link(label,u);if(a){a.className='btn'+(buttons.childElementCount?'':' primary');buttons.append(a)}}}}
- function upcoming(r){const section=document.getElementById('presave');if(!section)return;const title=section.querySelector('h2'),artist=section.querySelector('.artist-line'),date=section.querySelector('.release-date'),art=section.querySelector('.presave-art img'),badge=section.querySelector('#releaseBadge'),cta=section.querySelector('#releaseCta'),preview=section.querySelector('#songPreview'),player=section.querySelector('.preview-player');if(title)title.textContent=r.title;if(artist)artist.textContent=r.artist;if(date)date.textContent=new Date(r.release_at).toLocaleString(undefined,{dateStyle:'long',timeStyle:'short'});if(art&&safeUrl(r.cover_url)){art.src=safeUrl(r.cover_url);art.alt=r.title+' cover'}if(preview&&safeUrl(r.preview_url)){preview.src=safeUrl(r.preview_url);if(player)player.style.display=''}else if(player)player.style.display='none';if(badge)badge.textContent='Coming Soon';if(cta){const url=safeUrl(r.presave_url);cta.textContent=url?'Pre-Save Now':'Coming Soon';if(url){cta.href=url;cta.style.display=''}else{cta.removeAttribute('href');cta.style.display='none'}}const countdown=section.querySelector('.countdown');if(countdown){countdown.replaceChildren();const boxes=['Days','Hours','Minutes','Seconds'].map(label=>{const div=node('div','count-box');const strong=node('strong','', '00');div.append(strong,node('span','',label));countdown.append(div);return strong});const end=Date.parse(r.release_at);function tick(){const diff=Math.max(0,end-Date.now());const nums=[Math.floor(diff/86400000),Math.floor(diff/3600000)%24,Math.floor(diff/60000)%60,Math.floor(diff/1000)%60];boxes.forEach((b,i)=>b.textContent=String(nums[i]).padStart(2,'0'));if(diff===0){clearInterval(interval);refresh()}}tick();const interval=setInterval(tick,1000)}}
+ function upcoming(r){const section=document.getElementById('presave');if(!section)return;const title=section.querySelector('h2'),artist=section.querySelector('.artist-line'),date=section.querySelector('.release-date'),art=section.querySelector('.presave-art img'),badge=section.querySelector('#releaseBadge'),cta=section.querySelector('#releaseCta'),preview=section.querySelector('#songPreview'),player=section.querySelector('.preview-player');if(title)title.textContent=r.title;if(artist)artist.textContent=r.artist;if(date)date.textContent=new Date(r.release_at).toLocaleString(undefined,{dateStyle:'long',timeStyle:'short'});if(art&&safeUrl(r.cover_url)){art.src=safeUrl(r.cover_url);art.alt=r.title+' cover'}if(preview&&safeUrl(r.preview_url)){preview.src=safeUrl(r.preview_url);if(player)player.style.display=''}else if(player)player.style.display='none';if(badge)badge.textContent='Coming Soon';if(cta){const url=safeUrl(r.presave_url);cta.textContent=url?'Pre-Save Now':'Coming Soon';if(url){cta.href=url;cta.style.display=''}else{cta.removeAttribute('href');cta.style.display='none'}}const countdown=section.querySelector('.countdown');if(countdown){countdown.replaceChildren();const boxes=['Days','Hours','Minutes','Seconds'].map(label=>{const div=node('div','count-box');const strong=node('strong','', '00');div.append(strong,node('span','',label));countdown.append(div);return strong});const end=Date.parse(r.release_at);function tick(){const diff=Math.max(0,end-Date.now());const nums=[Math.floor(diff/86400000),Math.floor(diff/3600000)%24,Math.floor(diff/60000)%60,Math.floor(diff/1000)%60];boxes.forEach((b,i)=>b.textContent=String(nums[i]).padStart(2,'0'));if(diff===0){clearInterval(interval);refresh()}}const interval=setInterval(tick,1000);tick()}}
  async function refresh(){try{const res=await fetch('/api/releases',{cache:'no-store'});if(!res.ok)return;const data=await res.json();const records=(data.releases||[]).filter(r=>Number.isFinite(Date.parse(r.release_at)));if(!records.length)return;const now=Date.now();const released=records.filter(r=>Date.parse(r.release_at)<=now).sort((a,b)=>Date.parse(b.release_at)-Date.parse(a.release_at));const future=records.filter(r=>Date.parse(r.release_at)>now).sort((a,b)=>Date.parse(a.release_at)-Date.parse(b.release_at));const grid=document.getElementById('releaseGrid');if(grid){grid.replaceChildren(...released.map(card))}if(released.length)featured(released.find(r=>r.featured)||released[0]);const presave=document.getElementById('presave');if(future.length){if(presave)presave.style.display='';upcoming(future[0])}else if(presave)presave.style.display='none';}catch(e){console.warn('Keeping static music fallback',e)}}
  refresh();setInterval(refresh,300000);
 })();
