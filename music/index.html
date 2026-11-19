@@ -7,18 +7,31 @@
   <title>Music Vault | BIG SOLIS</title>
   <style>
     :root { color-scheme: dark; }
-    body { background:#080808; color:#f5f3ef; font:16px system-ui; margin:0; }
-    main { max-width:820px; margin:auto; padding:28px 18px; }
+    * { box-sizing: border-box; }
+    body { background:#080808; color:#f5f3ef; font:16px system-ui,sans-serif; margin:0; }
+    main { max-width:900px; margin:auto; padding:28px 18px; }
     a { color:#f4cc39; }
-    header { display:flex; justify-content:space-between; align-items:center; }
-    h1 { font-size:clamp(32px,6vw,56px); }
+    header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    h1 { font-size:clamp(32px,6vw,56px); margin-bottom:8px; }
+    h2 { margin-top:0; }
     article { background:#171717; border:1px solid #353535; border-radius:14px; padding:20px; margin:20px 0; }
     audio { width:100%; margin:12px 0; }
-    input { background:#0b0b0b; color:white; border:1px solid #666; border-radius:8px; padding:12px; width:120px; }
+    input { background:#0b0b0b; color:white; border:1px solid #666; border-radius:8px; padding:12px; width:120px; max-width:100%; }
     button { background:#f4cc39; color:black; border:0; padding:12px 18px; border-radius:8px; font-weight:bold; cursor:pointer; }
-    button:disabled { opacity:.5; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
     .muted { color:#bdbdbd; }
     .msg { color:#f5d67c; }
+    .album { display:grid; grid-template-columns:180px 1fr; gap:20px; }
+    .cover { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; background:#292929; }
+    .cover-placeholder { display:grid; place-items:center; color:#f4cc39; font-weight:800; text-align:center; padding:15px; }
+    .track-row { padding:12px 0; border-top:1px solid #353535; }
+    .track-row p { margin:0; }
+    .tag { color:#f4cc39; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
+    .section-title { margin-top:38px; }
+    @media(max-width:600px) {
+      .album { grid-template-columns:1fr; }
+      .cover { max-width:250px; }
+    }
   </style>
 </head>
 <body>
@@ -29,15 +42,28 @@
   </header>
 
   <h1>Music Vault</h1>
-  <p class="muted">Exclusive music. Stream for free. Downloads start at $1 — pay more if you want to support BIG SOLIS.</p>
+  <p class="muted">
+    Exclusive music. Stream for free.
+    Song downloads start at $1 — pay more if you want
+    to support BIG SOLIS.
+  </p>
 
   <p id="status" class="msg" role="status"></p>
+
+  <h2 class="section-title">Albums &amp; EPs</h2>
+  <section id="albums" aria-live="polite">
+    Loading albums…
+  </section>
+
+  <h2 class="section-title">Individual Songs</h2>
   <section id="tracks">Loading tracks…</section>
 </main>
 
 <script>
 const section = document.getElementById('tracks');
+const albumsSection = document.getElementById('albums');
 const status = document.getElementById('status');
+
 const params = new URLSearchParams(location.search);
 const paidSession = params.get('session_id');
 
@@ -60,22 +86,25 @@ async function verifyPayment() {
     );
 
     if (!r.ok) {
-      const message = await r.text();
       throw new Error(
-        'Payment verification failed (' + r.status + '): ' + message
+        'Payment verification failed (' +
+        r.status + '): ' + await r.text()
       );
     }
 
     const d = await r.json();
 
     if (!Number.isSafeInteger(d.id) || d.id < 1 || !d.grant) {
-      throw new Error('Download authorization was not returned.');
+      throw new Error(
+        'Download authorization was not returned.'
+      );
     }
 
     status.textContent =
       'Thank you for supporting BIG SOLIS! Your download is ready. ';
 
     const link = el('a', 'Download Your Song');
+
     link.href =
       '/api/studio/download?id=' +
       encodeURIComponent(d.id) +
@@ -85,8 +114,6 @@ async function verifyPayment() {
     link.setAttribute('download', '');
     status.append(link);
 
-    // Remove the Stripe session from the address bar
-    // only after verification succeeds.
     history.replaceState(null, '', location.pathname);
 
   } catch (e) {
@@ -94,54 +121,202 @@ async function verifyPayment() {
   }
 }
 
+function makeAudio(t) {
+  const audio = el('audio');
+
+  audio.controls = true;
+  audio.preload = 'none';
+
+  audio.src =
+    '/api/studio/audio?id=' +
+    encodeURIComponent(t.id);
+
+  let playRecorded = false;
+
+  audio.addEventListener('playing', () => {
+    if (playRecorded) return;
+
+    playRecorded = true;
+
+    fetch('/api/studio/play', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: t.id })
+    }).catch(() => {
+      playRecorded = false;
+    });
+  });
+
+  return audio;
+}
+
+async function loadAlbums() {
+  try {
+    const r = await fetch(
+      '/api/studio/albums',
+      { cache: 'no-store' }
+    );
+
+    if (!r.ok) {
+      throw Error('Albums are temporarily unavailable.');
+    }
+
+    const data = await r.json();
+
+    if (!Array.isArray(data.albums)) {
+      throw Error('Invalid album catalog.');
+    }
+
+    albumsSection.replaceChildren();
+
+    if (!data.albums.length) {
+      albumsSection.append(
+        el('p', 'No albums or EPs published yet. Check back soon.')
+      );
+      return;
+    }
+
+    for (const album of data.albums) {
+      const card = el('article');
+      card.className = 'album';
+
+      const coverArea = el('div');
+
+      if (album.cover_url) {
+        const cover = el('img');
+
+        cover.className = 'cover';
+        cover.src = album.cover_url;
+        cover.alt = album.title + ' cover artwork';
+        cover.loading = 'lazy';
+
+        coverArea.append(cover);
+      } else {
+        const placeholder = el('div', 'BIG SOLIS');
+        placeholder.className =
+          'cover cover-placeholder';
+
+        coverArea.append(placeholder);
+      }
+
+      const details = el('div');
+
+      const type = el(
+        'p',
+        album.release_type === 'ep' ? 'EP' : 'Album'
+      );
+      type.className = 'tag';
+
+      const title = el('h2', album.title);
+
+      const artist = el('p', album.artist);
+      artist.className = 'muted';
+
+      details.append(type, title, artist);
+
+      if (album.description) {
+        details.append(
+          el('p', album.description)
+        );
+      }
+
+      const tracks = Array.isArray(album.tracks)
+        ? album.tracks
+        : [];
+
+      for (let i = 0; i < tracks.length; i++) {
+        const track = tracks[i];
+
+        const row = el('div');
+        row.className = 'track-row';
+
+        row.append(
+          el('p', (i + 1) + '. ' + track.title),
+          makeAudio(track)
+        );
+
+        details.append(row);
+      }
+
+      const price = el(
+        'p',
+        'Album minimum: $' +
+        (album.price_min_cents / 100).toFixed(2)
+      );
+      price.className = 'muted';
+
+      details.append(price);
+
+      const note = el(
+        'p',
+        'Full-album checkout is coming soon. ' +
+        'For now, individual songs can be purchased below.'
+      );
+      note.className = 'msg';
+
+      details.append(note);
+
+      card.append(coverArea, details);
+      albumsSection.append(card);
+    }
+
+  } catch (e) {
+    albumsSection.textContent = e.message;
+  }
+}
+
 async function load() {
   try {
     const r = await fetch('/api/studio/catalog');
 
-    if (!r.ok) throw Error('Catalog unavailable');
-
-    const data = await r.json();
-    section.replaceChildren();
-
-    if (!data.tracks.length) {
-      section.textContent = 'No public tracks yet. Check back soon.';
+    if (!r.ok) {
+      throw Error('Catalog unavailable');
     }
 
-    for (const t of data.tracks) {
+    const data = await r.json();
+
+    section.replaceChildren();
+
+    if (
+      !Array.isArray(data.tracks) ||
+      !data.tracks.length
+    ) {
+      section.textContent =
+        'No public tracks yet. Check back soon.';
+    }
+
+    for (const t of (data.tracks || [])) {
       const a = el('article');
+
       const h = el('h2', t.title);
-      const desc = el('p', t.description || 'BIG SOLIS exclusive');
 
-      const audio = el('audio');
-      audio.controls = true;
-      
-let playRecorded = false;
+      const desc = el(
+        'p',
+        t.description || 'BIG SOLIS exclusive'
+      );
 
-audio.addEventListener('playing', () => {
-  if (playRecorded) return;
+      const audio = makeAudio(t);
 
-  playRecorded = true;
+      const minimum = Math.max(
+        100,
+        t.price_min_cents
+      );
 
-  fetch('/api/studio/play', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({id: t.id})
-  }).catch(() => {
-    playRecorded = false;
-  });
-});
-
-      audio.preload = 'none';
-      audio.src = '/api/studio/audio?id=' + t.id;
-
-      const minimum = Math.max(100, t.price_min_cents);
       const p = el(
         'p',
-        'Minimum download: $' + (minimum / 100).toFixed(2)
+        'Minimum download: $' +
+        (minimum / 100).toFixed(2)
       );
+
       p.className = 'muted';
 
-      const label = el('label', 'Your price (USD): ');
+      const label = el(
+        'label',
+        'Your price (USD): '
+      );
+
       const inp = el('input');
 
       inp.type = 'number';
@@ -150,12 +325,18 @@ audio.addEventListener('playing', () => {
       inp.step = '0.01';
       inp.value = (minimum / 100).toFixed(2);
 
-      const btn = el('button', 'Download / Support');
+      const btn = el(
+        'button',
+        'Download / Support'
+      );
+
       const feedback = el('p');
       feedback.className = 'msg';
 
       btn.onclick = async () => {
-        const cents = Math.round(Number(inp.value) * 100);
+        const cents = Math.round(
+          Number(inp.value) * 100
+        );
 
         if (
           !Number.isSafeInteger(cents) ||
@@ -168,28 +349,37 @@ audio.addEventListener('playing', () => {
         }
 
         btn.disabled = true;
-        feedback.textContent = 'Opening secure checkout...';
+
+        feedback.textContent =
+          'Opening secure checkout...';
 
         try {
-          const r = await fetch('/api/studio/checkout', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              id: t.id,
-              amount_cents: cents
-            })
-          });
+          const r = await fetch(
+            '/api/studio/checkout',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                id: t.id,
+                amount_cents: cents
+              })
+            }
+          );
 
           const d = await r.json();
 
           if (!r.ok) {
-            throw Error(d.error || 'Checkout failed');
+            throw Error(
+              d.error || 'Checkout failed'
+            );
           }
 
           if (!d.url) {
-            throw Error('Checkout URL was not returned.');
+            throw Error(
+              'Checkout URL was not returned.'
+            );
           }
 
           location.href = d.url;
@@ -201,6 +391,7 @@ audio.addEventListener('playing', () => {
       };
 
       label.append(inp);
+
       a.append(
         h,
         desc,
@@ -221,6 +412,7 @@ audio.addEventListener('playing', () => {
 }
 
 load();
+loadAlbums();
 verifyPayment();
 </script>
 </body>
