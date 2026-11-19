@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Albums & EPs | BIG SOLIS STUDIO</title>
+<style>
+:root{color-scheme:dark;--bg:#090909;--card:#171717;--line:#333;--gold:#f2c230;--text:#f5f5f5;--muted:#aaa}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+header{background:#121212;border-bottom:1px solid var(--line);padding:18px 5%;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header strong{color:var(--gold)}
+a{color:var(--gold)}
+main{max-width:1050px;margin:35px auto;padding:0 18px}
+h1{font-size:clamp(30px,5vw,46px);margin-bottom:8px}
+h2{margin-top:0}
+p,.muted{color:var(--muted);line-height:1.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin:22px 0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+label{display:block;font-size:14px;color:#ddd;margin-bottom:7px}
+input,select,textarea{width:100%;background:#080808;color:white;border:1px solid #444;border-radius:8px;padding:13px;font:inherit}
+textarea{min-height:90px;resize:vertical}
+button{background:var(--gold);color:#111;border:0;border-radius:8px;padding:12px 17px;font-weight:700;cursor:pointer}
+button.secondary{background:#303030;color:white}
+button.danger{background:#562222;color:white}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.track{display:flex;align-items:center;gap:10px;border:1px solid #333;border-radius:9px;padding:10px;margin:8px 0;background:#101010}
+.track input{width:18px;height:18px;flex-shrink:0}
+.track span{flex:1;overflow-wrap:anywhere}
+.track button{padding:8px 12px}
+#message{margin:15px 0;min-height:20px;white-space:pre-wrap}
+.good{color:#74dc98}.bad{color:#ff8c8c}
+.release{border:1px solid #363636;border-radius:10px;padding:16px;margin:12px 0}
+.release h3{margin:0 0 8px}
+.small{font-size:13px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}header{flex-wrap:wrap}.card{padding:16px}}
+</style>
+</head>
+<body>
+<header>
+<strong>☀ BIG SOLIS STUDIO</strong>
+<a href="/admin/">← Admin Dashboard</a>
+</header>
+
+<main>
+<h1>Albums & EPs</h1>
+<p>Create releases, choose existing uploaded songs, arrange the tracklist, and manage publishing.</p>
+
+<section class="card" id="loginBox">
+<h2>Admin Access</h2>
+<p>Enter the same admin token you use for BIG SOLIS STUDIO.</p>
+<label for="token">Admin token</label>
+<input id="token" type="password" autocomplete="off" placeholder="Enter admin token">
+<div class="actions">
+<button id="connectBtn">Connect</button>
+<button class="secondary" id="disconnectBtn">Clear Token</button>
+</div>
+</section>
+
+<div id="message" role="status" aria-live="polite"></div>
+
+<section class="card">
+<h2 id="formHeading">Create New Release</h2>
+<form id="albumForm">
+<div class="grid">
+<div>
+<label for="title">Album / EP Title</label>
+<input id="title" maxlength="150" required placeholder="Example: Agüitado">
+</div>
+<div>
+<label for="type">Release Type</label>
+<select id="type">
+<option value="album">Album</option>
+<option value="ep">EP</option>
+</select>
+</div>
+<div>
+<label for="artist">Artist</label>
+<input id="artist" value="BIG SOLIS" maxlength="150" required>
+</div>
+<div>
+<label for="price">Minimum Album Price (USD)</label>
+<input id="price" type="number" min="1" max="1000" step=".01" value="5.00" required>
+</div>
+</div>
+<div style="margin-top:16px">
+<label for="description">Release Description</label>
+<textarea id="description" maxlength="3000" placeholder="Tell fans what this project is about..."></textarea>
+</div>
+<div style="margin-top:16px">
+<label for="cover">Cover Image R2 Key (optional)</label>
+<input id="cover" maxlength="500" placeholder="Example: covers/album-cover.jpg">
+<p class="small">Leave blank if you haven't uploaded a cover image to R2 yet.</p>
+</div>
+<div style="margin-top:16px">
+<label>
+<input id="published" type="checkbox" style="width:auto">
+ Publish release
+</label>
+<p class="small">Recommendation: Save as a draft until the tracklist and payment flow are tested.</p>
+</div>
+<h2 style="margin-top:25px">Select Songs</h2>
+<p class="small">Songs must already exist in your BIG SOLIS STUDIO uploads.</p>
+<div id="availableTracks" class="muted">Connect to load your uploaded songs.</div>
+<h2 style="margin-top:25px">Track Order</h2>
+<div id="selectedTracks" class="muted">No tracks selected.</div>
+<div class="actions">
+<button type="submit" id="saveBtn">Save Release</button>
+<button type="button" class="secondary" id="resetBtn">New / Clear</button>
+<button type="button" class="secondary" id="reloadBtn">Refresh Data</button>
+</div>
+</form>
+</section>
+
+<section class="card">
+<h2>Your Albums & EPs</h2>
+<div id="releases" class="muted">Connect to load releases.</div>
+</section>
+</main>
+
+<script>
+"use strict";
+
+const API="/api/admin/albums";
+const UPLOAD_API="/api/admin/uploads";
+const $=id=>document.getElementById(id);
+
+let token="";
+let uploads=[];
+let albums=[];
+let selected=[];
+let editingId=null;
+
+function message(text,bad=false){
+ const el=$("message");
+ el.textContent=text;
+ el.className=bad?"bad":"good";
+}
+
+function authHeaders(){
+ return {"Authorization":"Bearer "+token};
+}
+
+async function api(url,options={}){
+ if(!token)throw Error("Enter your admin token first.");
+ const response=await fetch(url,{
+  ...options,
+  cache:"no-store",
+  headers:{
+   ...authHeaders(),
+   ...(options.body?{"Content-Type":"application/json"}:{}),
+   ...(options.headers||{})
+  }
+ });
+ const contentType=response.headers.get("content-type")||"";
+ const data=contentType.includes("json")
+  ?await response.json()
+  :{error:await response.text()};
+ if(!response.ok)throw Error(data.error||data.message||"Request failed: "+response.status);
+ return data;
+}
+
+function normalizeUploads(data){
+ const list=Array.isArray(data)?data:
+  data.uploads||data.tracks||data.items||data.results||[];
+ return Array.isArray(list)?list:[];
+}
+
+function normalizeAlbums(data){
+ const list=Array.isArray(data)?data:
+  data.albums||data.releases||data.items||data.results||[];
+ return Array.isArray(list)?list:[];
+}
+
+function selectedIds(){
+ return selected.map(Number).filter(Number.isSafeInteger);
+}
+
+function getTrackName(id){
+ const t=uploads.find(x=>Number(x.id)===Number(id));
+ return t?.title||("Song #"+id);
+}
+
+function element(tag,text,cls){
+ const el=document.createElement(tag);
+ if(text!==undefined)el.textContent=String(text);
+ if(cls)el.className=cls;
+ return el;
+}
+
+function renderAvailable(){
+ const root=$("availableTracks");
+ root.replaceChildren();
+ if(!uploads.length){
+  root.textContent="No uploaded songs found. Upload songs in the Studio first.";
+  return;
+ }
+ uploads.forEach(track=>{
+  const id=Number(track.id);
+  if(!Number.isSafeInteger(id))return;
+  const row=element("div",undefined,"track");
+  const check=element("input");
+  check.type="checkbox";
+  check.checked=selected.includes(id);
+  check.addEventListener("change",()=>{
+   if(check.checked){
+    if(!selected.includes(id))selected.push(id);
+   }else selected=selected.filter(x=>x!==id);
+   renderAvailable();
+   renderSelected();
+  });
+  row.append(check,element("span",track.title||"Untitled"));
+  root.append(row);
+ });
+}
+
+function renderSelected(){
+ const root=$("selectedTracks");
+ root.replaceChildren();
+ if(!selected.length){
+  root.textContent="No tracks selected.";
+  return;
+ }
+ selected.forEach((id,index)=>{
+  const row=element("div",undefined,"track");
+  row.append(element("span",(index+1)+". "+getTrackName(id)));
+  const up=element("button","↑","secondary");
+  up.type="button";
+  up.disabled=index===0;
+  up.onclick=()=>move(index,-1);
+  const down=element("button","↓","secondary");
+  down.type="button";
+  down.disabled=index===selected.length-1;
+  down.onclick=()=>move(index,1);
+  const remove=element("button","×","danger");
+  remove.type="button";
+  remove.onclick=()=>{
+   selected.splice(index,1);
+   renderSelected();renderAvailable();
+  };
+  row.append(up,down,remove);
+  root.append(row);
+ });
+}
+
+function move(index,step){
+ const other=index+step;
+ if(other<0||other>=selected.length)return;
+ [selected[index],selected[other]]=[selected[other],selected[index]];
+ renderSelected();
+}
+
+function clearForm(){
+ editingId=null;
+ selected=[];
+ $("albumForm").reset();
+ $("artist").value="BIG SOLIS";
+ $("price").value="5.00";
+ $("formHeading").textContent="Create New Release";
+ $("saveBtn").textContent="Save Release";
+ renderSelected();
+ renderAvailable();
+}
+
+function albumTrackIds(album){
+ const tracks=album.tracks||album.track_ids||[];
+ if(!Array.isArray(tracks))return [];
+ return tracks.map(t=>Number(
+  typeof t==="object"?(t.upload_id??t.id):t
+ )).filter(Number.isSafeInteger);
+}
+
+function editAlbum(album){
+ editingId=Number(album.id);
+ $("title").value=album.title||"";
+ $("type").value=album.release_type||album.type||"album";
+ $("artist").value=album.artist||"BIG SOLIS";
+ $("description").value=album.description||"";
+ $("cover").value=album.cover_key||"";
+ $("price").value=((Number(album.price_min_cents)||500)/100).toFixed(2);
+ $("published").checked=Number(album.published)===1||album.published===true;
+ selected=albumTrackIds(album);
+ $("formHeading").textContent="Edit Release #"+editingId;
+ $("saveBtn").textContent="Update Release";
+ renderAvailable();renderSelected();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderAlbums(){
+ const root=$("releases");
+ root.replaceChildren();
+ if(!albums.length){
+  root.textContent="No albums or EPs yet.";
+  return;
+ }
+ albums.forEach(album=>{
+  const card=element("div",undefined,"release");
+  card.append(element("h3",album.title||"Untitled Release"));
+  const status=Number(album.published)===1||album.published===true
+   ?"Published":"Draft";
+  card.append(element("p",
+   (album.release_type||album.type||"album").toUpperCase()
+   +" • "+status
+   +" • $"+((Number(album.price_min_cents)||0)/100).toFixed(2)
+  ));
+  const tracks=albumTrackIds(album);
+  if(tracks.length){
+   card.append(element("p",tracks.map((id,i)=>
+    (i+1)+". "+getTrackName(id)
+   ).join(" | "),"small"));
+  }
+  const btn=element("button","Edit","secondary");
+  btn.onclick=()=>editAlbum(album);
+  card.append(btn);
+  root.append(card);
+ });
+}
+
+async function load(){
+ try{
+  message("Loading studio data...");
+  const [a,u]=await Promise.all([
+   api(API),
+   api(UPLOAD_API)
+  ]);
+  albums=normalizeAlbums(a);
+  uploads=normalizeUploads(u);
+  renderAvailable();
+  renderSelected();
+  renderAlbums();
+  message("Studio connected. Albums and songs loaded.");
+ }catch(error){
+  message(error.message,true);
+ }
+}
+
+$("connectBtn").onclick=()=>{
+ token=$("token").value.trim();
+ if(!token){
+  message("Enter your admin token.",true);
+  return;
+ }
+ load();
+};
+
+$("disconnectBtn").onclick=()=>{
+ token="";
+ $("token").value="";
+ uploads=[];albums=[];
+ clearForm();renderAlbums();
+ message("Token cleared from this page.");
+};
+
+$("reloadBtn").onclick=load;
+$("resetBtn").onclick=clearForm;
+
+$("albumForm").onsubmit=async event=>{
+ event.preventDefault();
+ try{
+  if(!token)throw Error("Connect with your admin token first.");
+  if(!selected.length)throw Error("Select at least one song.");
+  const cents=Math.round(Number($("price").value)*100);
+  if(!Number.isSafeInteger(cents)||cents<100||cents>100000)
+   throw Error("Enter a price between $1 and $1,000.");
+
+  const body={
+   title:$("title").value.trim(),
+   artist:$("artist").value.trim(),
+   release_type:$("type").value,
+   description:$("description").value.trim(),
+   cover_key:$("cover").value.trim()||null,
+   price_min_cents:cents,
+   published:$("published").checked?1:0,
+   track_ids:selectedIds()
+  };
+
+  if(!body.title||!body.artist)throw Error("Title and artist are required.");
+
+  $("saveBtn").disabled=true;
+  const result=await api(API,{
+   method:editingId?"PUT":"POST",
+   body:JSON.stringify(editingId?{...body,id:editingId}:body)
+  });
+
+  message(result.message||"Release saved successfully.");
+  clearForm();
+  await load();
+ }catch(error){
+  message(error.message,true);
+ }finally{
+  $("saveBtn").disabled=false;
+ }
+};
+</script>
+</body>
+</html>
