@@ -30,6 +30,18 @@ h1{font-size:clamp(38px,6vw,68px);line-height:.95;margin:8px 0 12px}.sub{color:v
 .analytics h2{margin:8px 0}.analytics .stats{grid-template-columns:repeat(2,minmax(0,1fr));margin:18px 0}
 .analytics .tablewrap table{min-width:440px}.analytics-note{font-size:12px;color:var(--muted)}
 @media(max-width:600px){.analytics .stats{grid-template-columns:1fr}}
+
+/* Album and EP manager */
+.album-manager{margin-top:40px;padding-top:30px;border-top:1px solid var(--line)}
+.album-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;background:var(--panel);border:1px solid var(--line);padding:22px}
+.album-form label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.album-form input,.album-form textarea,.album-form select{width:100%;background:#080808;border:1px solid #393529;color:#fff;padding:12px;font:inherit}
+.album-form textarea{min-height:85px;resize:vertical}.album-form .wide{grid-column:1/-1}
+.album-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.album-list{display:grid;gap:12px;margin:18px 0}
+.album-item{background:var(--panel);border:1px solid var(--line);padding:17px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.album-item small{display:block;color:var(--muted);margin-top:4px}.album-item .album-actions{justify-content:flex-end}
+.album-help{font-size:12px;color:var(--muted)}
+@media(max-width:720px){.album-form{grid-template-columns:1fr}.album-item{flex-direction:column;align-items:stretch}}
 </style>
 </head>
 <body>
@@ -109,6 +121,25 @@ h1{font-size:clamp(38px,6vw,68px);line-height:.95;margin:8px 0 12px}.sub{color:v
       <label><span><input type="checkbox" name="published" checked> Published on website</span></label>
       <div class="wide release-actions"><button class="btn" type="submit" id="saveRelease">Save Release</button><button class="secondary" type="button" id="cancelRelease">Clear / New</button><span id="releaseStatus" role="status"></span></div>
     </form><div id="releaseList" class="release-list"></div></section>
+
+    <section class="album-manager" id="albumManager">
+      <div class="eyebrow">BIG SOLIS STUDIO</div>
+      <h2>Albums &amp; EPs</h2>
+      <p class="sub">Organize uploaded songs into albums or EPs. Keep releases in draft until you're ready to publish.</p>
+      <form id="albumForm" class="album-form">
+        <label>Album / EP title<input name="title" maxlength="180" required placeholder="e.g. Agüitado"></label>
+        <label>Artist<input name="artist" maxlength="180" required value="BIG SOLIS"></label>
+        <label>Release type<select name="release_type"><option value="album">Album</option><option value="ep">EP</option></select></label>
+        <label>Minimum album price (USD)<input name="price" type="number" min="1" max="1000" step="0.01" value="5.00" required></label>
+        <label class="wide">Description<textarea name="description" maxlength="2000" placeholder="Tell fans the story behind this release"></textarea></label>
+        <label class="wide">Track upload IDs, in play order<input name="track_ids" placeholder="Example: 3, 5, 7" required></label>
+        <p class="wide album-help">Use IDs from your uploaded music. Each song must already exist in your private upload library. Cover artwork will be added in the next step.</p>
+        <label class="wide"><span><input type="checkbox" name="published" style="width:auto"> Publish album publicly</span></label>
+        <div class="wide album-actions"><button class="btn" id="albumSave" type="submit">Create Album / EP</button><button class="secondary" id="albumReset" type="button">Clear / New</button><button class="secondary" id="albumRefresh" type="button">Refresh Albums</button></div>
+        <div class="wide status" id="albumStatus" role="status" aria-live="polite"></div>
+      </form>
+      <div id="albumList" class="album-list"></div>
+    </section>
     <div class="note">This admin page does not store your token permanently. It stays only in this browser tab/session.</div>
   </div></main>
 </div>
@@ -507,5 +538,70 @@ if(getToken()){
 </script>
 <!-- END SUBSCRIBER ACTIVITY -->
 
+
+<script>
+/* Album manager expects a protected /api/admin/albums endpoint.
+   The frontend is ready; album API, cover uploads and Stripe album checkout
+   must be implemented separately before albums can go live. */
+(function(){
+ const form=document.getElementById('albumForm');
+ const list=document.getElementById('albumList');
+ const status=document.getElementById('albumStatus');
+ const save=document.getElementById('albumSave');
+ let editing=null;
+ function message(msg,kind=''){status.textContent=msg;status.className='status '+kind}
+ function reset(){editing=null;form.reset();form.elements.artist.value='BIG SOLIS';form.elements.price.value='5.00';save.textContent='Create Album / EP';message('')}
+ function token(){return sessionStorage.getItem('bigsolis_admin_token')||''}
+ async function api(method,data){
+  const r=await fetch('/api/admin/albums',{method,headers:{Authorization:'Bearer '+token(),...(data?{'Content-Type':'application/json'}:{})},...(data?{body:JSON.stringify(data)}:{}) ,cache:'no-store'});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(r.status===404?'Album API not installed yet. Your existing dashboard is still working.':d.error||'Album request failed');
+  return d;
+ }
+ function makeButton(label,callback){const b=document.createElement('button');b.type='button';b.className='secondary';b.textContent=label;b.addEventListener('click',callback);return b}
+ async function load(){
+  if(!token())return;
+  message('Loading albums...');
+  try{
+   const d=await api('GET');list.replaceChildren();
+   const albums=Array.isArray(d.albums)?d.albums:[];
+   if(!albums.length){list.textContent='No albums yet. Create your first album above.'}
+   for(const a of albums){
+    const card=document.createElement('div');card.className='album-item';
+    const info=document.createElement('div');const title=document.createElement('b');title.textContent=a.title||'Untitled';
+    const sub=document.createElement('small');const tracks=Array.isArray(a.track_ids)?a.track_ids:(Array.isArray(a.tracks)?a.tracks.map(t=>typeof t==='object'?t.upload_id:t):[]);
+    sub.textContent=(a.release_type||'album').toUpperCase()+' · '+(a.artist||'BIG SOLIS')+' · '+tracks.length+' tracks · '+(a.published?'Published':'Draft');info.append(title,sub);
+    const actions=document.createElement('div');actions.className='album-actions';
+    actions.append(makeButton('Edit',()=>{
+      editing=a.id;for(const k of ['title','artist','description'])form.elements[k].value=a[k]||'';
+      form.elements.release_type.value=a.release_type||'album';form.elements.price.value=(Number(a.price_min_cents||500)/100).toFixed(2);
+      form.elements.track_ids.value=tracks.join(', ');form.elements.published.checked=!!a.published;
+      save.textContent='Update Album / EP';form.scrollIntoView({behavior:'smooth'});
+    }),makeButton('Delete',async()=>{
+      if(!confirm('Delete album '+a.title+'? This should not delete its individual songs.'))return;
+      try{await api('DELETE',{id:a.id});reset();await load()}catch(e){message(e.message,'error')}
+    }));card.append(info,actions);list.append(card);
+   }
+   message(albums.length+' album(s) loaded.','success');
+  }catch(e){message(e.message,'error')}
+ }
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const f=form.elements;
+  const ids=f.track_ids.value.split(',').map(v=>Number(v.trim()));
+  if(!ids.length||ids.some(v=>!Number.isSafeInteger(v)||v<1)||new Set(ids).size!==ids.length){message('Enter unique numeric upload IDs separated by commas.','error');return}
+  const cents=Math.round(Number(f.price.value)*100);
+  if(!Number.isSafeInteger(cents)||cents<100||cents>100000){message('Album minimum price must be between $1 and $1,000.','error');return}
+  const payload={title:f.title.value.trim(),artist:f.artist.value.trim(),release_type:f.release_type.value,description:f.description.value.trim(),price_min_cents:cents,published:f.published.checked,track_ids:ids};
+  if(editing!==null)payload.id=editing;
+  save.disabled=true;message('Saving album...');
+  try{await api(editing!==null?'PUT':'POST',payload);reset();await load();message('Album saved.','success')}catch(err){message(err.message,'error')}finally{save.disabled=false}
+ });
+ document.getElementById('albumReset').addEventListener('click',reset);
+ document.getElementById('albumRefresh').addEventListener('click',load);
+ document.getElementById('loginForm').addEventListener('submit',()=>setTimeout(()=>{if(token())load()},1000));
+ if(token())load();
+})();
+</script>
 </body>
 </html>
