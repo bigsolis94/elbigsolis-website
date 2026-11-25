@@ -1,0 +1,52 @@
+name: Website health
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 15 * * *'
+permissions:
+  contents: read
+jobs:
+  public-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check public pages and catalogs
+        run: |
+          python - <<'PY'
+          import urllib.request, json, sys
+          from html.parser import HTMLParser
+          class Page(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.tags = set()
+              def handle_starttag(self, tag, attrs):
+                  self.tags.add(tag)
+          failed = False
+          for path, key in [('/', None), ('/music/', None), ('/api/albums', 'albums'), ('/api/studio/catalog', 'tracks')]:
+              try:
+                  req = urllib.request.Request('https://elbigsolis.com' + path, headers={'User-Agent': 'BigSolisHealth/1.0', 'Cache-Control': 'no-cache'})
+                  with urllib.request.urlopen(req, timeout=25) as r:
+                      body = r.read(4000000).decode('utf-8')
+                      print(f'{path}: HTTP {r.status}')
+                      if key:
+                          rows = json.loads(body).get(key)
+                          if not isinstance(rows, list):
+                              raise ValueError('Expected catalog array: ' + key)
+                          print(f'Published {key}: {len(rows)}')
+                          for item in rows:
+                              if not isinstance(item, dict) or not item.get('title'):
+                                  raise ValueError('Catalog entry missing title')
+                              print(' - ' + repr(item['title']))
+                          if not rows:
+                              print('NOTICE: empty catalog; compare with expected inventory')
+                      else:
+                          page = Page()
+                          page.feed(body)
+                          if not {'html', 'body'}.issubset(page.tags):
+                              raise ValueError('Missing HTML structure')
+                          print('HTML structure present; browser rendering not tested')
+              except Exception as e:
+                  failed = True
+                  print(f'FAIL {path}: {type(e).__name__}: {e}')
+          sys.exit(int(failed))
+          PY
