@@ -28,6 +28,20 @@
     .track-row p { margin:0; }
     .tag { color:#f4cc39; font-size:13px; text-transform:uppercase; letter-spacing:.08em; }
     .section-title { margin-top:38px; }
+    [hidden] { display:none !important; }
+    .intro { max-width:68ch; line-height:1.6; }
+    .song-card { padding:clamp(16px,4vw,28px); }
+    .song-card h2 { overflow-wrap:anywhere; }
+    .purchase { display:flex; align-items:end; flex-wrap:wrap; gap:12px; border-top:1px solid #353535; padding-top:16px; }
+    .purchase label { display:grid; gap:6px; }
+    .purchase button { min-height:46px; }
+    .song-card audio { display:block; }
+    .song-card .msg:empty, #status:empty { display:none; }
+    :focus-visible { outline:2px solid #f4cc39; outline-offset:4px; }
+    @media(max-width:480px) {
+      .purchase { align-items:stretch; flex-direction:column; }
+      .purchase input, .purchase button { width:100%; }
+    }
     @media(max-width:600px) {
       .album { grid-template-columns:1fr; }
       .cover { max-width:250px; }
@@ -42,17 +56,17 @@
   </header>
 
   <h1>Music Vault</h1>
-  <p class="muted">
+  <p class="muted intro">
     Stream my music for free. If you enjoy what I do and want to support me as an independent artist, you can download my songs starting at $1 or contribute any amount above that. Thank you for supporting my music!<br><br>
     <span lang="es">Escucha mi música gratis. Si te gusta lo que hago y quieres apoyar mi proyecto como artista independiente, puedes descargar mis canciones desde $1 o aportar la cantidad que tú quieras por encima de ese mínimo. ¡Gracias por apoyar mi música!</span>
   </p>
 
   <p id="status" class="msg" role="status"></p>
 
-  <h2 class="section-title">Albums &amp; EPs</h2>
-  <section id="albums" aria-live="polite">
-    Loading albums…
-  </section>
+  <div id="album-group" hidden>
+    <h2 class="section-title">Albums &amp; EPs</h2>
+    <section id="albums" aria-live="polite"></section>
+  </div>
 
   <h2 class="section-title">Individual Songs</h2>
   <section id="tracks">Loading tracks…</section>
@@ -61,6 +75,7 @@
 <script>
 const section = document.getElementById('tracks');
 const albumsSection = document.getElementById('albums');
+const albumGroup = document.getElementById('album-group');
 const status = document.getElementById('status');
 
 const params = new URLSearchParams(location.search);
@@ -171,12 +186,11 @@ async function loadAlbums() {
     albumsSection.replaceChildren();
 
     if (!data.albums.length) {
-      albumsSection.append(
-        el('p', 'No albums or EPs published yet. Check back soon.')
-      );
+      albumGroup.hidden = true;
       return;
     }
 
+    albumGroup.hidden = false;
     for (const album of data.albums) {
       const card = el('article');
       card.className = 'album';
@@ -262,6 +276,7 @@ async function loadAlbums() {
     }
 
   } catch (e) {
+    albumGroup.hidden = false;
     albumsSection.textContent = e.message;
   }
 }
@@ -288,6 +303,7 @@ async function load() {
 
     for (const t of (data.tracks || [])) {
       const a = el('article');
+      a.className = 'song-card';
 
       const h = el('h2', t.title);
 
@@ -330,6 +346,7 @@ async function load() {
       );
 
       const feedback = el('p');
+      feedback.setAttribute('role', 'status');
       feedback.className = 'msg';
 
       btn.onclick = async () => {
@@ -396,14 +413,10 @@ async function load() {
         a.append(desc);
       }
 
-      a.append(
-        audio,
-        p,
-        label,
-        el('span', ' '),
-        btn,
-        feedback
-      );
+      const purchase = el('div');
+      purchase.className = 'purchase';
+      purchase.append(label, btn);
+      a.append(audio, p, purchase, feedback);
 
       section.append(a);
     }
